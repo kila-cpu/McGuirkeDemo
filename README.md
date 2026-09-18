@@ -133,7 +133,35 @@ States: `Unassigned · Assigned · Draft · Awaiting PO · Complete`. Every step
 saves as it is left, so a card put down mid-job is a Draft with the work on it.
 Unassigned cards put a banner on a full access home screen.
 
-## 4 · The printable docket
+## 4 · Plant Machinery GA1
+
+Search the fleet, pick a machine, read its **report of thorough examination**.
+
+The GA1 applies to **lifting appliances**, and that distinction is built in: an
+excavator or a telehandler needs one, a dumper, roller, compressor or genset does
+not. So *"no GA1 on file"* and *"not a lifting appliance"* are different answers —
+one wants chasing, the other is simply correct — and the screen says which.
+
+- **Search** on plant number, model, serial or certificate number
+- **Filters** — needs attention / in date / due soon / out of date / no GA1 needed
+- Every machine shows its certificate number, next due date and standing:
+  *245 days left*, *due in 25 days*, *lapsed 30 days ago*
+- Anything **out on hire on a lapsed GA1** is called out at the top of the screen
+  and on the hire itself, because that is the one that matters
+- Tapping a machine gives the report in force — examined on, next due, interval,
+  **safe working load**, whether it is safe to operate, any defects noted, and the
+  competent person who signed it — plus earlier reports on the same machine
+- **View the certificate** opens it laid out as **Form GA1**, headed by the
+  examining company with the McGuirk mark as the owner's file copy. Print works.
+
+The hire detail carries a GA1 line for its machine, so a lapsed cert shows up
+where somebody is about to send the machine out again.
+
+The seed covers every case: three in date, **MH-202** falling due inside the
+month, **MH-530 lapsed and out on hire with a customer**, and six machines
+correctly outside the regime.
+
+## 5 · The printable docket
 
 Two pages, in the reader the paper would come out of:
 
@@ -157,7 +185,7 @@ belongs to and from any job card raised off one.
 Clock in / out sits at the top of Home, and **Profile** carries the access level
 and a **Reset the demo data** button.
 
-Four screens, nothing else: Home, On Hire / Off Hire, Job Cards, Dockets.
+Five screens: Home, On Hire / Off Hire, Job Cards, Dockets, Plant Machinery GA1.
 
 ## Known limits of a wireframe
 
@@ -177,8 +205,9 @@ Four screens, nothing else: Home, On Hire / Off Hire, Job Cards, Dockets.
 
 ## Not in this set, by decision
 
-Hired-in plant, rates and spend, and GA1 / CE certificate tracking were all
-ruled out of scope.
+Hired-in plant and rates/spend are out of scope. The GA1 screen reads
+certificates and prints them; **uploading or recording a new examination is not
+built**, since the reports come from the examining company.
 
 ## What would sharpen it
 

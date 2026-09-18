@@ -843,6 +843,38 @@ const DOCKET_SEED = [
     raised_jobcard:'JC-0038' }
 ];
 
+// GA1 reports of thorough examination. Twelve month interval on these machines;
+// a lifting appliance used to carry people would be six.
+const CERT_SEED = [
+  // MH-201 Kubota KX037-4 — in date, with last year's report still on file.
+  { id:1, machine_id:1, cert_no:'MPI-24-1187', examined_on:D(-485), next_due:D(-120), interval_months:12,
+    swl:'1,000 kg at 3.0 m radius', reason:'periodic', safe:true, defects:null },
+  { id:2, machine_id:1, cert_no:'MPI-25-0244', examined_on:D(-120), next_due:D(245), interval_months:12,
+    swl:'1,000 kg at 3.0 m radius', reason:'periodic', safe:true, defects:null },
+  // MH-202 JCB 86C-2 — falls due inside the month.
+  { id:3, machine_id:2, cert_no:'MPI-24-1402', examined_on:D(-340), next_due:D(25), interval_months:12,
+    swl:'2,500 kg at 4.0 m radius', reason:'periodic', safe:true, defects:null },
+  // MH-203 Takeuchi TB216 — examined after a new quick hitch went on.
+  { id:4, machine_id:3, cert_no:'MPI-25-0518', examined_on:D(-60), next_due:D(305), interval_months:12,
+    swl:'600 kg at 2.5 m radius', reason:'repair', safe:true,
+    defects:'Quick hitch renewed since the last report. Check pin and safety pin daily.' },
+  // MH-530 JCB 540-140 — lapsed a month ago, and it is out on hire. This is
+  // the one the screen exists to catch.
+  { id:5, machine_id:8, cert_no:'MPI-24-0963', examined_on:D(-395), next_due:D(-30), interval_months:12,
+    swl:'4,000 kg at 1.2 m / 1,000 kg at full reach', reason:'periodic', safe:true, defects:null },
+  // MH-531 Manitou MT625 — in date.
+  { id:6, machine_id:9, cert_no:'MPI-25-0377', examined_on:D(-95), next_due:D(270), interval_months:12,
+    swl:'2,500 kg at 1.2 m / 800 kg at full reach', reason:'periodic', safe:true, defects:null }
+];
+
+// Who carries out the examinations. One place to change it.
+const EXAMINER = {
+  company: 'Midland Plant Inspections Ltd',
+  addr: 'Clonminch Road, Tullamore, Co. Offaly',
+  person: 'T. Gilmartin',
+  qual: 'Competent person — AIEng, plant & lifting equipment'
+};
+
 // ── Store ──────────────────────────────────────────────────────────────────
 let db;
 
@@ -928,6 +960,7 @@ function loadDemoData(){
   db.condition_items = CONDITION_ITEMS.map(i => Object.assign({}, i));
   db.service_items = SERVICE_ITEMS.map(i => Object.assign({}, i));
   db.dockets = JSON.parse(JSON.stringify(DOCKET_SEED)).map(hydrateDocket);
+  db.certs = JSON.parse(JSON.stringify(CERT_SEED));
   db.shifts = [];
 
   // Job cards that are finished were signed, so give them a signature.
@@ -961,6 +994,7 @@ const cust    = id => byId('customers', id);
 const machine = id => byId('machines', id);
 const hire    = id => byId('hires', id);
 const docket  = id => byId('dockets', id);
+const cert    = id => byId('certs', id);
 const jobcard = id => byId('jobcards', id);
 const ref = (prefix, key) => `${prefix}-${String(db.seq[key]++).padStart(4, '0')}`;
 
@@ -995,6 +1029,24 @@ const JSTATUS = {
   awaiting_po: { label:'Awaiting PO', cls:'blue'   },
   complete:    { label:'Complete',    cls:'grey'   }
 };
+// ── GA1 ────────────────────────────────────────────────────────────────────
+// The GA1 is the report of thorough examination of a *lifting appliance* under
+// the General Application Regulations. That is the part worth getting right in
+// the app: an excavator or a telehandler needs one, a dumper, roller,
+// compressor or genset does not — so a machine with no GA1 on file is either a
+// problem or perfectly correct, and the screen has to say which.
+const GA1_TYPES = ['excavator', 'telehandler'];
+const needsGA1 = type => GA1_TYPES.includes(type);
+const DUE_WINDOW = 30;                       // days out that counts as due soon
+const CERT_STATE = {
+  valid:        { label:'In date',                cls:'green'  },
+  due:          { label:'Due soon',               cls:'amber'  },
+  expired:      { label:'Out of date',            cls:'red'    },
+  none:         { label:'No GA1 on file',         cls:'tomato' },
+  not_required: { label:'Not a lifting appliance', cls:'grey'  }
+};
+const CERT_ORDER = { expired:0, none:1, due:2, valid:3, not_required:4 };
+
 const JC_STEPS = ['Start', 'Work', 'Parts', 'End'];
 const ON_STEPS = ['Details', 'Readings', 'Condition', 'Damage', 'Photos', 'Sign'];
 const OFF_STEPS = ['Readings', 'Condition', 'Damage', 'Photos', 'Sign'];
@@ -1120,6 +1172,44 @@ function jobcardsView(scope, status){
   return list.sort((a, b) => rank[a.status] - rank[b.status] || (a.raised_on < b.raised_on ? 1 : -1));
 }
 
+// A machine's GA1 standing. "No cert on file" and "not a lifting appliance" are
+// deliberately different answers — one wants chasing, the other is correct.
+function certView(m){
+  const required = needsGA1(m.type);
+  const history = db.certs.filter(c => c.machine_id === m.id)
+    .sort((a, b) => a.examined_on < b.examined_on ? 1 : -1);
+  const c = history[0] || null;
+  const days = c ? daysBetween(todayISO(), c.next_due) : null;
+  const key = !required ? 'not_required'
+    : !c ? 'none'
+    : days < 0 ? 'expired'
+    : days <= DUE_WINDOW ? 'due' : 'valid';
+
+  const h = db.hires.find(x => x.machine_id === m.id && x.status === 'on_hire');
+  return {
+    machine: m, required, cert: c, history,
+    history_count: history.length,
+    days, key,
+    state_label: CERT_STATE[key].label, state_cls: CERT_STATE[key].cls,
+    // The phrase that goes on the row: how long left, or how long lapsed.
+    standing: key === 'not_required' ? 'No GA1 required'
+      : key === 'none' ? 'Never examined — cannot be hired out for lifting'
+      : key === 'expired' ? `Lapsed ${plural(-days, 'day')} ago`
+      : key === 'due' ? `Due in ${plural(days, 'day')}`
+      : `${plural(days, 'day')} left`,
+    on_hire_now: !!h,
+    hire_ref: h ? h.ref : null,
+    customer_name: h ? cust(h.customer_id).name : null,
+    site_name: h ? site(h.site_id).name : null
+  };
+}
+const certsView = filter => db.machines.map(certView)
+  .filter(cv => filter === 'all' ? true
+    : filter === 'flagged' ? (cv.key === 'expired' || cv.key === 'none' || cv.key === 'due')
+    : cv.key === filter)
+  .sort((a, b) => CERT_ORDER[a.key] - CERT_ORDER[b.key] ||
+    (a.machine.plant_no < b.machine.plant_no ? -1 : 1));
+
 function dashboard(){
   const ms = db.machines;
   return {
@@ -1130,7 +1220,9 @@ function dashboard(){
     unassigned_cards: db.jobcards.filter(j => !j.fitter_id && j.status !== 'complete').length,
     my_cards: db.jobcards.filter(j => j.fitter_id === S.user.id && j.status !== 'complete').length,
     open_cards: db.jobcards.filter(j => j.status !== 'complete').length,
-    dockets_today: db.dockets.filter(d => d.date === todayISO()).length
+    dockets_today: db.dockets.filter(d => d.date === todayISO()).length,
+    ga1_expired: db.machines.map(certView).filter(c => c.key === 'expired' || c.key === 'none').length,
+    ga1_due: db.machines.map(certView).filter(c => c.key === 'due').length
   };
 }
 
@@ -1214,6 +1306,7 @@ const I = {
   reset:  o => sv('<path d="M4 12a8 8 0 108-8 8 8 0 00-6 2.7L4 9"/><path d="M4 4v5h5"/>', o),
   phone:  o => sv('<path d="M5 3h4l2 5-3 2a12 12 0 006 6l2-3 5 2v4a1 1 0 01-1 1A17 17 0 014 4a1 1 0 011-1z"/>', o),
   box:    o => sv('<path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>', o),
+  cert:   o => sv('<path d="M19 13V4a1 1 0 00-1-1H6a1 1 0 00-1 1v16a1 1 0 001 1h5"/><path d="M8 8h8M8 12h5"/><circle cx="17" cy="17" r="3.4"/><path d="M15 20l-.6 2.4 2.6-1.3 2.6 1.3L19 20"/>', o),
   hand:   o => sv('<path d="M9 11V5.5a1.5 1.5 0 013 0V11"/><path d="M12 11V4.5a1.5 1.5 0 013 0V11"/><path d="M15 11V6.5a1.5 1.5 0 013 0V13a8 8 0 01-8 8H9a5 5 0 01-5-5v-3a1.5 1.5 0 013 0"/>', o)
 };
 
@@ -1223,7 +1316,7 @@ const S = {
   screen: 'home', sheet: null, sheetWire: null, q: '',
   pdf: null, pdfWire: null,
   sheetKey: null, painted: null, scrollMem: {},
-  filters: { hire:'on_hire', jc:'open', jcScope:'mine', dk:'all' },
+  filters: { hire:'on_hire', jc:'open', jcScope:'mine', dk:'all', ga1:'flagged' },
   draft: null          // the docket or job card being filled in
 };
 
@@ -1509,7 +1602,7 @@ function renderLogin(err){
 function signIn(id){
   S.user = emp(id);
   S.screen = 'home'; S.q = ''; S.sheet = null; S.pdf = null; S.draft = null;
-  S.filters = { hire:'on_hire', jc:'open', jcScope: isFull() ? 'all' : 'mine', dk:'all' };
+  S.filters = { hire:'on_hire', jc:'open', jcScope: isFull() ? 'all' : 'mine', dk:'all', ga1:'flagged' };
   render();
   paintPins();
 }
@@ -1531,13 +1624,15 @@ function paintPins(){
 // Shell
 // ═══════════════════════════════════════════════════════════════════════════
 const TITLES = {
-  hires:'On Hire / Off Hire', jobcards:'Job Cards', dockets:'Dockets', profile:'Profile'
+  hires:'On Hire / Off Hire', jobcards:'Job Cards', dockets:'Dockets',
+  ga1:'Plant Machinery GA1', profile:'Profile'
 };
 const TABS = [
   { id:'home',     label:'Home',    ico:'home'   },
   { id:'hires',    label:'Hires',   ico:'swap'   },
   { id:'jobcards', label:'Cards',   ico:'wrench' },
   { id:'dockets',  label:'Dockets', ico:'doc'    },
+  { id:'ga1',      label:'GA1',     ico:'cert'   },
   { id:'profile',  label:'Profile', ico:'user'   }
 ];
 
@@ -1650,7 +1745,7 @@ function render(){
 
   const views = {
     home: viewHome, hires: viewHires, jobcards: viewJobCards,
-    dockets: viewDockets, profile: viewProfile
+    dockets: viewDockets, ga1: viewGA1, profile: viewProfile
   };
   (views[S.screen] || viewHome)();
 
@@ -1718,7 +1813,8 @@ function viewHome(){
   const menu = [
     { id:'hires',    ico:'swap',   t:'On Hire / Off Hire', s:'Put a machine out, take it back', n: d.past_due },
     { id:'jobcards', ico:'wrench', t:'Job Cards',          s:'Service, repairs, breakdowns', n: full ? d.unassigned_cards : d.my_cards },
-    { id:'dockets',  ico:'doc',    t:'Dockets',            s:'Every docket signed, on file' }
+    { id:'dockets',  ico:'doc',    t:'Dockets',            s:'Every docket signed, on file' },
+    { id:'ga1',      ico:'cert',   t:'Plant Machinery GA1', s:'Thorough examination certs', n: d.ga1_expired }
   ];
   const cards = menu.map((m, i) => {
     const cls = i === 0 ? ' dark' : i === 1 ? ' warm' : '';
@@ -1846,6 +1942,13 @@ function openHire(id){
   const cards = db.jobcards.filter(j => j.hire_id === h.id).map(jobcardView);
 
   const acts = [];
+  const ga1 = certView(machine(h.machine_id));
+  if (h.status === 'on_hire' && (ga1.key === 'expired' || ga1.key === 'none'))
+    acts.push(`<button class="banner" id="hd-ga1" style="margin-bottom:12px">
+      <span class="ic">${I.alert({ s:22, c:'#a8341f' })}</span>
+      <span class="bt"><b>GA1 ${ga1.key === 'none' ? 'not on file' : 'lapsed ' + plural(-ga1.days, 'day') + ' ago'}</b>
+        <span>It is out with the customer and must not be used for lifting.</span></span>
+      ${I.chev({ s:18, c:'#a8341f' })}</button>`);
   if (h.past_due) acts.push(`<div class="note warm">${plural(h.days_over, 'day')} past the agreed
     ${esc(h.period_total_label)} — it was due back ${fmtDate(h.due_date)} and is still on charge.
     ${isFull() ? 'Extend it if the customer is keeping it, or collect it.' : ''}</div>`);
@@ -1866,6 +1969,10 @@ function openHire(id){
       <div class="kv"><span class="k">Plant no</span><span class="v">${esc(h.plant_no)}</span></div>
       <div class="kv"><span class="k">Make &amp; model</span><span class="v">${esc(h.make_model)}</span></div>
       <div class="kv"><span class="k">Serial</span><span class="v">${esc(h.serial)}</span></div>
+      <div class="kv"><span class="k">GA1</span><span class="v">${(() => {
+        const cv = certView(machine(h.machine_id));
+        return `<span class="pill ${cv.state_cls}" style="font-size:11.5px">${esc(cv.state_label)}</span>`;
+      })()}</span></div>
       <div class="kv"><span class="k">Meter out</span><span class="v">${onD ? num(onD.meter) + ' hrs' : '—'}</span></div>
       ${offD ? `<div class="kv"><span class="k">Meter back</span><span class="v">${num(offD.meter)} hrs</span></div>
         <div class="kv"><span class="k">Hours used</span><span class="v big">${num(h.hours_used)}</span></div>` : ''}
@@ -1925,6 +2032,7 @@ function openHire(id){
     () => {
       if ($('#hd-off')) $('#hd-off').onclick = () => startOffHire(h.id);
       if ($('#hd-ext')) $('#hd-ext').onclick = () => extendSheet(h.id);
+      if ($('#hd-ga1')) $('#hd-ga1').onclick = () => openCert(h.machine_id);
       $$('[data-dk]').forEach(b => b.onclick = () => openDocket(Number(b.dataset.dk)));
       $$('[data-jc]').forEach(b => b.onclick = () => openJobCard(Number(b.dataset.jc)));
     });
@@ -3616,6 +3724,257 @@ function jobCardStep(){
         toast(`${r.ref} away to the office — waiting on a PO`, 'good');
       } catch (e) { toast(e.message, 'bad'); }
     };
+  };
+  render();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Plant Machinery GA1
+// Search the fleet, pick a machine, read its report of thorough examination.
+// ═══════════════════════════════════════════════════════════════════════════
+function viewGA1(){
+  const f = S.filters.ga1;
+  const q = S.q.toLowerCase();
+  let list = certsView(f);
+  if (q) list = list.filter(cv => (cv.machine.plant_no + ' ' + cv.machine.make_model + ' ' +
+    cv.machine.serial + ' ' + (cv.cert ? cv.cert.cert_no : '')).toLowerCase().includes(q));
+
+  const all = db.machines.map(certView);
+  const chips = [['flagged','Needs attention'],['valid','In date'],['due','Due soon'],
+    ['expired','Out of date'],['not_required','No GA1 needed'],['all','All plant']]
+    .map(([k, l]) => `<button class="chip ${f===k?'on':''}" data-gf="${k}">${l}</button>`).join('');
+
+  const rows = list.map(cv => {
+    const m = cv.machine;
+    const bad = cv.key === 'expired' || cv.key === 'none';
+    return `<button class="lcard ${bad ? 'flag' : ''}" data-ga1="${m.id}">
+      <div class="top">
+        <span class="ic-sm">${I.cert({ s:20, c:'#8a6410' })}</span>
+        <div style="flex:1;min-width:0">
+          <div class="t">${esc(m.plant_no)} — ${esc(m.make_model)}</div>
+          <div class="s">${cv.required
+            ? (cv.cert ? esc(cv.cert.cert_no) + ' · next due ' + fmtDate(cv.cert.next_due) : 'No report on file')
+            : esc(m.type.charAt(0).toUpperCase() + m.type.slice(1)) + ' — outside the lifting appliance rules'}</div>
+        </div>
+        ${I.chev({ s:18, c:'#8b8373' })}
+      </div>
+      <div class="tags">
+        <span class="pill ${cv.state_cls}">${esc(cv.state_label)}</span>
+        ${cv.required ? `<span class="pill grey">${esc(cv.standing)}</span>` : ''}
+        ${cv.on_hire_now ? `<span class="pill ${bad ? 'red' : 'blue'}">${bad ? I.alert({ s:12, c:'#c8352a' }) : ''} On hire · ${esc(cv.customer_name)}</span>` : ''}
+      </div>
+    </button>`;
+  }).join('');
+
+  const outWithLapsed = all.filter(cv => cv.on_hire_now && (cv.key === 'expired' || cv.key === 'none'));
+
+  paint(`
+    <div class="stats">
+      <div class="stat good"><div class="n">${all.filter(c => c.key === 'valid').length}</div><div class="l">In date</div></div>
+      <div class="stat ${all.filter(c => c.key === 'due').length ? 'warn' : ''}"><div class="n">${all.filter(c => c.key === 'due').length}</div><div class="l">Due soon</div></div>
+      <div class="stat ${all.filter(c => c.key === 'expired' || c.key === 'none').length ? 'warn' : ''}"><div class="n">${all.filter(c => c.key === 'expired' || c.key === 'none').length}</div><div class="l">Out of date</div></div>
+    </div>
+    ${outWithLapsed.length ? `<div class="note warm">${I.alert({ s:15, c:'#a8341f' })}
+      <b>${esc(outWithLapsed.map(c => c.machine.plant_no).join(', '))}</b> is out on hire on a lapsed GA1.
+      It cannot be used as a lifting appliance until it has been examined again.</div>` : ''}
+    <div class="search">${I.search({ s:20, c:'#8b8373' })}
+      <input id="q" placeholder="Plant no, model, serial, cert no…" value="${esc(S.q)}" aria-label="Search plant for GA1"></div>
+    <div class="chips">${chips}</div>
+    <div class="slabel">${plural(list.length, 'machine')}</div>
+    ${rows || '<div class="empty">Nothing under that filter.</div>'}`);
+
+  wireSearch();
+  $$('[data-gf]').forEach(b => b.onclick = () => { S.filters.ga1 = b.dataset.gf; render(); });
+  $$('[data-ga1]').forEach(b => b.onclick = () => openCert(Number(b.dataset.ga1)));
+}
+
+// The machine's GA1, read back — and the report itself behind it.
+function openCert(machineId){
+  const m = machine(machineId);
+  const cv = certView(m);
+  const c = cv.cert;
+
+  openSheet(m.plant_no + ' · GA1', `
+    <div class="tags" style="margin:0 0 16px">
+      <span class="pill ${cv.state_cls}">${esc(cv.state_label)}</span>
+      ${cv.required ? `<span class="pill grey">${esc(cv.standing)}</span>` : ''}
+      ${cv.on_hire_now ? `<span class="pill blue">${esc(cv.hire_ref)}</span>` : ''}
+    </div>
+
+    ${!cv.required ? `<div class="note">A ${esc(m.type)} is not a lifting appliance, so the GA1
+      thorough examination regime does not apply to it. Its safety checks are the walk-round on the
+      hire docket and its service schedule.</div>` : ''}
+
+    ${cv.key === 'expired' ? `<div class="note warm">${I.alert({ s:15, c:'#a8341f' })}
+      The GA1 lapsed ${plural(-cv.days, 'day')} ago, on ${fmtDate(c.next_due)}.
+      ${cv.on_hire_now ? `It is out with ${esc(cv.customer_name)} at ${esc(cv.site_name)} — it must not be
+        used for lifting until it has been examined again.` : 'It cannot go out for lifting work until it has been examined again.'}</div>` : ''}
+    ${cv.key === 'due' ? `<div class="note">The GA1 falls due in ${plural(cv.days, 'day')}, on
+      ${fmtDate(c.next_due)}. Book the examination before it goes out again on a long hire.</div>` : ''}
+    ${cv.key === 'none' ? `<div class="note warm">${I.alert({ s:15, c:'#a8341f' })}
+      There is no GA1 on file for this machine and it is a lifting appliance. It cannot be hired out
+      for lifting until it has been thoroughly examined.</div>` : ''}
+
+    <div class="slabel sp">The machine</div>
+    <div class="readout">
+      <div class="kv"><span class="k">Plant no</span><span class="v">${esc(m.plant_no)}</span></div>
+      <div class="kv"><span class="k">Make &amp; model</span><span class="v">${esc(m.make_model)}</span></div>
+      <div class="kv"><span class="k">Serial</span><span class="v">${esc(m.serial)}</span></div>
+      <div class="kv"><span class="k">Year</span><span class="v">${m.year}</span></div>
+      <div class="kv"><span class="k">Hour meter</span><span class="v">${num(m.hours)} hrs</span></div>
+      <div class="kv"><span class="k">Where it is</span><span class="v">${esc(cv.on_hire_now
+        ? cv.customer_name + ' · ' + cv.site_name : machineView(m).site_name)}</span></div>
+    </div>
+
+    ${c ? `<div class="slabel sp">The report in force</div>
+      <div class="readout">
+        <div class="kv"><span class="k">Certificate no</span><span class="v">${esc(c.cert_no)}</span></div>
+        <div class="kv"><span class="k">Examined on</span><span class="v">${fmtDate(c.examined_on)}</span></div>
+        <div class="kv"><span class="k">Next due</span><span class="v ${cv.key === 'expired' ? '' : 'big'}"
+          style="${cv.key === 'expired' ? 'color:var(--red);font-weight:800' : ''}">${fmtDate(c.next_due)}</span></div>
+        <div class="kv"><span class="k">Interval</span><span class="v">${c.interval_months} months</span></div>
+        <div class="kv"><span class="k">Safe working load</span><span class="v">${esc(c.swl)}</span></div>
+        <div class="kv"><span class="k">Safe to operate</span><span class="v" style="color:${c.safe ? 'var(--green-2)' : 'var(--red)'}">${c.safe ? 'Yes' : 'No'}</span></div>
+        <div class="kv"><span class="k">Examined by</span><span class="v">${esc(EXAMINER.person)}<br>${esc(EXAMINER.company)}</span></div>
+      </div>
+      ${c.defects ? `<div class="note">${esc(c.defects)}</div>` : ''}
+      <button class="btn" id="gc-doc">${I.cert({ s:18, c:'#f5c542' })} View the certificate</button>` : ''}
+
+    ${cv.history_count > 1 ? `<div class="slabel sp">Earlier reports</div>
+      ${cv.history.slice(1).map(x => `<button class="lcard" data-hist="${x.id}">
+        <div class="top"><span class="ic-sm">${I.cert({ s:19, c:'#8a6410' })}</span>
+          <div style="flex:1;min-width:0"><div class="t">${esc(x.cert_no)}</div>
+            <div class="s">Examined ${fmtDate(x.examined_on)} · ran to ${fmtDate(x.next_due)}</div></div>
+          ${I.chev({ s:18, c:'#8b8373' })}</div></button>`).join('')}` : ''}`,
+    `<button class="btn ghost" id="sh-cancel">Close</button>`,
+    () => {
+      if ($('#gc-doc')) $('#gc-doc').onclick = () => openCertDoc(m.id, c.id);
+      $$('[data-hist]').forEach(b => b.onclick = () => openCertDoc(m.id, Number(b.dataset.hist)));
+    });
+}
+
+// ── The certificate itself ──────────────────────────────────────────────────
+// Laid out as Form GA1 — report of thorough examination of a lifting appliance
+// — in the same reader the dockets use.
+function certPageHtml(m, c){
+  const cv = certView(m);
+  const inForce = cv.cert && cv.cert.id === c.id;
+  const days = daysBetween(todayISO(), c.next_due);
+  const REASONS = {
+    periodic:'At the interval prescribed by the Regulations',
+    installed:'After installation or assembly at a new site',
+    repair:'After repair, modification or exceptional circumstances'
+  };
+
+  return `<div class="pdf-page">
+    <div class="pdf-head">
+      <div style="flex:1;min-width:0">
+        <b style="display:block;font-size:12.5px;font-weight:800;letter-spacing:.01em">${esc(EXAMINER.company)}</b>
+        <span style="display:block;font-size:8.6px;color:#555;line-height:1.5">${esc(EXAMINER.addr)}</span>
+        <span style="display:block;font-size:8.6px;color:#555;line-height:1.5">Plant &amp; lifting equipment examinations</span>
+      </div>
+      <div style="flex:0 0 96px;text-align:right">
+        <svg style="width:96px;height:auto;display:block;margin-left:auto" viewBox="0 0 212 132" role="img" aria-label="McGuirk Hire"><use href="#mcguirk-mark"/></svg>
+        <span style="display:block;font-size:7.6px;color:#777;margin-top:2px">Owner's file copy</span>
+      </div>
+    </div>
+
+    <p class="pdf-title">FORM GA1</p>
+    <p class="pdf-ref">Report of thorough examination of a lifting appliance<br>
+      Safety, Health and Welfare at Work (General Application) Regulations<br>
+      Certificate ${esc(c.cert_no)} &nbsp;·&nbsp; ${fmtDate(c.examined_on)}</p>
+
+    <table class="pdf-kv">
+      <tr class="sec"><th colspan="2">1 · Owner of the lifting appliance</th></tr>
+      <tr><th>Name</th><td>${esc(YARD.name)}</td></tr>
+      <tr><th>Address</th><td>${YARD.addr.map(esc).join(', ')}</td></tr>
+    </table>
+
+    <table class="pdf-kv">
+      <tr class="sec"><th colspan="2">2 · The lifting appliance</th></tr>
+      <tr><th>Plant number</th><td class="big">${esc(m.plant_no)}</td></tr>
+      <tr><th>Description</th><td>${esc(m.make_model)} — ${esc(m.type)}</td></tr>
+      <tr><th>Serial number</th><td>${esc(m.serial)}</td></tr>
+      <tr><th>Year of manufacture</th><td>${m.year}</td></tr>
+      <tr><th>Safe working load</th><td class="big">${esc(c.swl)}</td></tr>
+      <tr><th>Where examined</th><td>${esc(YARD.name)}, ${esc(YARD.addr[1] || '')}</td></tr>
+    </table>
+
+    <table class="pdf-kv">
+      <tr class="sec"><th colspan="2">3 · The examination</th></tr>
+      <tr><th>Date of this thorough examination</th><td class="big">${fmtDate(c.examined_on)}</td></tr>
+      <tr><th>Examined because</th><td>${esc(REASONS[c.reason] || REASONS.periodic)}</td></tr>
+      <tr><th>Interval</th><td>Every ${c.interval_months} months</td></tr>
+      <tr><th>Latest date for the next thorough examination</th><td class="big">${fmtDate(c.next_due)}</td></tr>
+    </table>
+
+    <p class="pdf-sec">4 · Defects, repairs or renewals required</p>
+    <table class="pdf-tb"><tbody><tr><td style="height:46px;vertical-align:top">${c.defects
+      ? esc(c.defects)
+      : 'No defect found affecting the safe operation of the appliance at the time of examination.'}</td></tr></tbody></table>
+
+    <p class="pdf-sec">5 · Is the appliance safe to operate?</p>
+    <table class="pdf-tb"><tbody><tr>
+      <td class="c ${c.safe ? 'pass' : 'fail'}" style="width:72px">${c.safe ? 'YES' : 'NO'}</td>
+      <td>${c.safe
+        ? 'The appliance and every part of it was found to be free from patent defect, and is safe to operate within the safe working load stated above.'
+        : 'The appliance must not be used until the defects recorded above have been made good and it has been re-examined.'}</td>
+    </tr></tbody></table>
+
+    <div class="pdf-sign">
+      <div class="sc"><div class="sl">Competent person</div>
+        <div class="sbox"><img src="${fakeSig(EXAMINER.person)}" alt="Signature"></div>
+        <div class="sv">${esc(EXAMINER.person)}<br>${esc(EXAMINER.qual)}<br>${fmtDate(c.examined_on)}</div></div>
+      <div class="sc"><div class="sl">On behalf of</div>
+        <div class="sbox"><i>${esc(EXAMINER.company)}</i></div>
+        <div class="sv">${esc(EXAMINER.addr)}<br>Report no ${esc(c.cert_no)}</div></div>
+    </div>
+
+    <p class="pdf-terms">This report relates only to the appliance identified above and to its condition at the date
+      of examination. The safe working load stated must not be exceeded. The appliance must be thoroughly examined
+      again on or before the latest date shown at item 3, and following any exceptional circumstances, repair or
+      modification affecting its strength or stability. This report is to be kept available for inspection and a copy
+      supplied with the appliance while it is on hire.</p>
+
+    <div class="pdf-foot">
+      <div class="ad">${inForce
+        ? (days < 0
+            ? `<b style="color:#b32218">Out of date — lapsed ${plural(-days, 'day')} ago.</b>`
+            : `In force — ${plural(days, 'day')} remaining.`)
+        : '<b>Superseded</b> — a later report is in force for this machine.'}</div>
+      <div class="pg">${esc(c.cert_no)} · ${esc(m.plant_no)}</div>
+    </div>
+  </div>`;
+}
+
+function openCertDoc(machineId, certId){
+  const m = machine(machineId);
+  const c = cert(certId);
+  const file = `GA1-${c.cert_no}-${m.plant_no}.pdf`;
+  S.pdf = `<div class="pdfview" role="dialog" aria-label="${esc(c.cert_no)}">
+    <div class="pdf-toolbar">
+      <button class="tb" id="pv-x" aria-label="Close">${I.x({ s:18, c:'#e8e8e8' })}</button>
+      <span class="fn">${esc(file)}</span>
+      <button class="tb" id="pv-print" aria-label="Print">${I.print({ s:17, c:'#e8e8e8' })}</button>
+      <button class="tb" id="pv-mail" aria-label="Email">${I.mail({ s:17, c:'#e8e8e8' })}</button>
+      <button class="tb" id="pv-down" aria-label="Download">${I.down({ s:17, c:'#e8e8e8' })}</button>
+    </div>
+    <div class="pdf-scroll" id="pv-scroll">
+      ${certPageHtml(m, c)}
+      <p class="pdf-note">The GA1 as it would be filed. Print works — emailing and
+        downloading are the live system's job.</p>
+    </div>
+  </div>`;
+  S.pdfWire = () => {
+    $('#pv-x').onclick = () => { S.pdf = null; S.pdfWire = null; render(); };
+    $('#pv-print').onclick = () => {
+      const zone = $('#printzone');
+      zone.innerHTML = certPageHtml(m, c);
+      window.print();
+      setTimeout(() => { zone.innerHTML = ''; }, 500);
+    };
+    $('#pv-mail').onclick = () => toast(`Would email ${c.cert_no} out with the machine`);
+    $('#pv-down').onclick = () => toast(`Would save ${file} to the phone`);
   };
   render();
 }
