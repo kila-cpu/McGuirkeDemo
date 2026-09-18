@@ -1,0 +1,8 @@
+{
+  "name": "mcguirkhiredemo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "McGuirk Hire — operator mobile app wireframes (on hire / off hire dockets, plant job cards)",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}
