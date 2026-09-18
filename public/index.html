@@ -1480,7 +1480,7 @@ function renderLogin(err){
     ${MARK(170, ';margin:0 auto 4px;display:block')}
     <div class="sub">Operator app</div>
     <label class="f"><span>Who are you?</span>
-      <select id="li-emp">${db.employees.map(e => `<option value="${e.id}">${esc(e.name)} — ${esc(e.role)}</option>`).join('')}</select>
+      <select id="li-emp">${db.employees.map(e => `<option value="${e.id}">${esc(e.name)}</option>`).join('')}</select>
     </label>
     <label class="f"><span>PIN</span>
       <input id="li-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
