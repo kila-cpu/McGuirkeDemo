@@ -101,8 +101,12 @@ where it is standing and since when — and then its paperwork:
 
 ## Also in the app
 
-Clock in / out and a **New job card** shortcut sit at the top of Home, and
-**Profile** carries the access level and a **Reset the demo data** button.
+Home carries a **New job card** shortcut, a count of open cards, GA1s out of
+date and machines in the yard, then the three screens. **Profile** carries the
+access level and a **Reset the demo data** button.
+
+There is no clock in / out and no alert banner on Home: the counts and the tile
+badges already say what wants doing.
 
 Four screens: Home, Job Cards, Plant Machinery GA1, Fleet.
 

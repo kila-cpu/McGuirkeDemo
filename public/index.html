@@ -135,20 +135,6 @@ button{cursor:pointer}
 .shdr h1{flex:1;text-align:center;font-size:17.5px;font-weight:700;margin:0;letter-spacing:-.015em}
 .shdr .bal{width:44px;flex:0 0 44px}
 
-/* Clock band at the top of Home */
-.clockband{background:var(--card);border-radius:17px;padding:15px;margin-bottom:16px;box-shadow:var(--shadow)}
-.clockband .cbstate{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink-2);
-  font-weight:650;font-variant-numeric:tabular-nums;padding:1px 2px 14px}
-.clockband .d{width:9px;height:9px;flex:0 0 9px;border-radius:50%;background:var(--ink-3)}
-.clockband .d.on{background:var(--green);box-shadow:0 0 0 3px rgba(18,160,106,.18)}
-.cbacts{display:flex;gap:10px}
-.cbacts button{flex:1;min-width:0;border:0;border-radius:13px;padding:15px 12px;font-size:16px;
-  font-weight:750;display:flex;align-items:center;justify-content:center;gap:8px}
-.cbacts .go{background:var(--green);color:#fff}
-.cbacts .stop{background:var(--red);color:#fff}
-.cbacts .soft{background:var(--grey-soft);color:var(--ink)}
-.cbacts button[disabled]{opacity:.45}
-
 /* Home menu cards */
 .mcard{display:flex;align-items:center;gap:15px;width:100%;text-align:left;background:var(--card);
   border:0;border-radius:17px;padding:17px;margin-bottom:12px;box-shadow:var(--shadow);color:var(--ink)}
@@ -613,15 +599,6 @@ const daysBetween = (a, b) => Math.round((dt(b) - dt(a)) / 86400000);
 const fmtDate = d => { if(!d) return '—'; const x=dt(d); return isNaN(x)?d:`${x.getDate()} ${MONTHS[x.getMonth()]} ${x.getFullYear()}`; };
 const fmtShort = d => { if(!d) return '—'; const x=dt(d); return isNaN(x)?d:`${x.getDate()} ${MONTHS[x.getMonth()]}`; };
 const addDays = (iso, n) => { const d = dt(iso); d.setDate(d.getDate() + n); return isoLocal(d); };
-const mondayOf = iso => { const d = dt(iso); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return isoLocal(d); };
-const DOW = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-const nowClock = () => { const d = new Date(); return d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0'); };
-const stampNow = () => todayISO() + 'T' + String(new Date().getHours()).padStart(2,'0') + ':' + String(new Date().getMinutes()).padStart(2,'0') + ':00';
-const fmtClock = t => String(t || '').slice(0, 5);
-const toMin = t => { const [h, m] = String(t || '').split(':').map(Number); return (h || 0) * 60 + (m || 0); };
-const spanMin = (a, b) => { const d = toMin(b) - toMin(a); return d > 0 ? d : d + 1440; };
-const fmtSpell = mins => { const h = Math.floor(mins / 60), m = mins % 60;
-  return h ? `${h}h ${String(m).padStart(2,'0')}m` : `${m}m`; };
 const num = n => n == null || n === '' ? '—' : Number(n).toLocaleString('en-IE');
 const first = n => String(n || '').split(' ')[0];
 const initials = n => String(n || '').split(' ').filter(Boolean).slice(0,2).map(w => w[0]).join('').toUpperCase();
@@ -722,7 +699,7 @@ function makeSeed(){ return {
       labour_hours:3, parts:[{ name:'Door glass — KX037 offside', qty:1, allocated:true },{ name:'Rear combination lamp', qty:1, allocated:true }],
       checks:[], photos:[], signed_by:'Johnny McGuirk', signature:null, po:'GH-5510-DMG', completed_on:D(-5) }
   ],
-  seq: { jobcard:43, jobcard_id:6, shift_id:1 }
+  seq: { jobcard:43, jobcard_id:6 }
 }; }
 
 // GA1 reports of thorough examination. Twelve month interval on these machines;
@@ -820,7 +797,6 @@ function loadDemoData(){
   db = makeSeed();
   db.service_items = SERVICE_ITEMS.map(i => Object.assign({}, i));
   db.certs = JSON.parse(JSON.stringify(CERT_SEED));
-  db.shifts = [];
 
   // Job cards that are finished were signed, so give them a signature.
   db.jobcards.forEach(j => { if (j.signed_by) j.signature = fakeSig(j.signed_by); });
@@ -831,19 +807,6 @@ function loadDemoData(){
   const done = db.jobcards.filter(j => j.status === 'complete' || j.status === 'awaiting_po');
   done.forEach(j => { j.checks = SERVICE_ITEMS.map(i => ({ item_id:i.id, state:'pass', note:null })); });
 
-  // Whatever weekdays of this week have gone, seed as clocked shifts so the
-  // timesheet has something in it. Opened on a Monday it starts empty, which
-  // is also correct.
-  const monday = mondayOf(todayISO());
-  for (let back = 4; back >= 1; back--) {
-    const date = addDays(todayISO(), -back);
-    if (date < monday) continue;
-    if ((dt(date).getDay() + 6) % 7 > 4) continue;
-    db.employees.forEach(e => db.shifts.push({
-      id: db.seq.shift_id++, employee_id: e.id, date,
-      start_at: `${date}T07:45:00`, end_at: `${date}T17:15:00`
-    }));
-  }
 }
 
 const byId = (list, id) => db[list].find(x => x.id === Number(id)) || null;
@@ -989,7 +952,6 @@ function dashboard(){
   };
 }
 
-const activeShift = () => db.shifts.find(s => s.employee_id === S.user.id && !s.end_at) || null;
 const isFull = () => S.user && S.user.access === 'full';
 
 // ── Machine silhouettes ─────────────────────────────────────────────────────
@@ -1101,343 +1063,6 @@ function toast(msg, kind){
 // Mutations — everything that changes the yard goes through here, so the same
 // rules apply however the change was reached.
 // ═══════════════════════════════════════════════════════════════════════════
-function clockIn(){
-  if (activeShift()) throw new Error('You are already on the clock');
-  const s = { id: db.seq.shift_id++, employee_id: S.user.id, date: todayISO(), start_at: stampNow(), end_at: null };
-  db.shifts.push(s);
-  return s;
-}
-function clockOut(){
-  const s = activeShift();
-  if (!s) throw new Error('You are not on the clock');
-  s.end_at = stampNow();
-  return { minutes: spanMin(s.start_at.slice(11), s.end_at.slice(11)) };
-}
-
-// ── Job cards ──────────────────────────────────────────────────────────────
-// Raising one needs the job and, if there is somebody free, the person. Every
-// other field on the card belongs to whoever does the work.
-function createJobCard(p){
-  const m = machine(p.machine_id);
-  if (!m) throw new Error('Pick a machine');
-  if (!(p.fault || '').trim()) throw new Error('Say what is wrong with it');
-  const j = {
-    id: db.seq.jobcard_id++, ref: ref('JC', 'jobcard'), machine_id: m.id,
-    type: p.type || 'repair', location: p.location || 'workshop',
-    site_id: p.location === 'site' ? Number(p.site_id) : 1,
-    customer_id: p.customer_id ? Number(p.customer_id) : null,
-    site_contact: p.site_contact || null, fault: p.fault.trim(),
-    // A general-access user can only ever raise a card for themselves.
-    fitter_id: isFull() ? (p.fitter_id ? Number(p.fitter_id) : null) : S.user.id,
-    status: 'assigned', raised_by: S.user.id, raised_on: todayISO(), step: 1,
-    work_done: '', labour_hours: null,
-    parts: (p.parts || []).map(x => ({ name:x.name, qty:x.qty, allocated:true })),
-    checks: [], photos: [], signed_by: null, signature: null, po: null, completed_on: null
-  };
-  if (!j.fitter_id) j.status = 'unassigned';
-  db.jobcards.push(j);
-  return jobcardView(j);
-}
-function assignJobCard(id, fitterId){
-  const j = jobcard(id);
-  if (!j) throw new Error('Card not found');
-  if (!isFull()) throw new Error('Only a full access account can hand a card to somebody else');
-  j.fitter_id = Number(fitterId);
-  if (j.status === 'unassigned') j.status = 'assigned';
-  return jobcardView(j);
-}
-function saveJobCard(id, patch){
-  const j = jobcard(id);
-  if (!j) throw new Error('Card not found');
-  Object.assign(j, patch);
-  if (j.status === 'assigned' && (j.work_done || (j.checks || []).length)) j.status = 'draft';
-  return jobcardView(j);
-}
-// Finishing a card sends it to the office: the work is done, the money is not.
-function sendJobCardForPO(id, p){
-  const j = jobcard(id);
-  if (!j) throw new Error('Card not found');
-  if (!(j.work_done || '').trim()) throw new Error('Write up what was carried out first');
-  if (!j.labour_hours) throw new Error('Put the labour hours on it');
-  if (!p.signature) throw new Error('The card has to be signed off on site');
-  if (!(p.signed_by || '').trim()) throw new Error('Name the person signing');
-  j.signed_by = p.signed_by.trim(); j.signature = p.signature;
-  j.completed_on = todayISO(); j.status = 'awaiting_po'; j.step = 4;
-  // The machine is right again, so it goes back on the hire list — unless it is
-  // still out with a customer.
-  const m = machine(j.machine_id);
-  if (m.status === 'off_road' || m.status === 'service') { m.status = 'yard'; m.since = todayISO(); }
-  return jobcardView(j);
-}
-function closeJobCard(id, po){
-  const j = jobcard(id);
-  if (!j) throw new Error('Card not found');
-  if (!(po || '').trim()) throw new Error('The office needs a PO number to close it');
-  j.po = po.trim(); j.status = 'complete';
-  return jobcardView(j);
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Login
-// ═══════════════════════════════════════════════════════════════════════════
-function renderLogin(err){
-  root.innerHTML = `<div class="login">
-    ${MARK(170, ';margin:0 auto 4px;display:block')}
-    <div class="sub">Operator app</div>
-    <label class="f"><span>Who are you?</span>
-      <select id="li-emp">${db.employees.map(e => `<option value="${e.id}">${esc(e.name)}</option>`).join('')}</select>
-    </label>
-    <label class="f"><span>PIN</span>
-      <input id="li-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
-    </label>
-    <button class="btn" id="li-go">Sign in</button>
-    <div class="err">${err ? esc(err) : ''}</div>
-    <div class="pinhint"><h4>Demo PIN</h4>
-      <p class="sub2">Tap a name to sign straight in — the PIN is 1111 for everyone.</p>
-      ${db.employees.map(e => `<button class="pinrow" data-pin="${e.id}"><span>${esc(e.name)}</span>
-        <span class="rl">${esc(e.access === 'full' ? 'Full access' : 'General')}</span>
-        <span class="no">${esc(e.pin)}</span></button>`).join('')}
-    </div>
-  </div>`;
-
-  const go = () => {
-    const who = emp(Number($('#li-emp').value));
-    if (!who || $('#li-pin').value !== who.pin)
-      return renderLogin('That PIN is not right — check the list below.');
-    signIn(who.id);
-  };
-  $('#li-go').onclick = go;
-  $('#li-pin').onkeydown = e => { if (e.key === 'Enter') go(); };
-  $$('[data-pin]').forEach(b => b.onclick = () => signIn(Number(b.dataset.pin)));
-  paintPins();
-}
-function signIn(id){
-  S.user = emp(id);
-  S.screen = 'home'; S.q = ''; S.sheet = null; S.pdf = null; S.draft = null;
-  S.filters = { jc:'open', jcScope: isFull() ? 'all' : 'mine', ga1:'flagged', fleet:'all' };
-  render();
-  paintPins();
-}
-function signOut(){
-  S.user = null; S.sheet = null; S.pdf = null; S.draft = null;
-  renderLogin();
-}
-// The list in the desktop rail signs in too, so the demo can be driven from
-// outside the handset while it is being shown on a screen.
-function paintPins(){
-  const box = $('#pinlist');
-  if (!box) return;
-  box.innerHTML = db.employees.map(e => `<button class="pin" data-outpin="${e.id}">
-    <span>${esc(e.name)}</span><span class="rl">${esc(e.role)}</span><span class="no">${esc(e.pin)}</span></button>`).join('');
-  $$('[data-outpin]').forEach(b => b.onclick = () => signIn(Number(b.dataset.outpin)));
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Shell
-// ═══════════════════════════════════════════════════════════════════════════
-const TITLES = {
-  jobcards:'Job Cards', ga1:'Plant Machinery GA1', fleet:'Fleet', profile:'Profile'
-};
-const TABS = [
-  { id:'home',     label:'Home',    ico:'home'   },
-  { id:'jobcards', label:'Cards',   ico:'wrench' },
-  { id:'ga1',      label:'GA1',     ico:'cert'   },
-  { id:'fleet',    label:'Fleet',   ico:'digger' },
-  { id:'profile',  label:'Profile', ico:'user'   }
-];
-
-function clockBandStatus(){
-  const on = activeShift();
-  return on
-    ? `On the clock since ${fmtClock(on.start_at.slice(11))} · ${fmtSpell(spanMin(on.start_at.slice(11), stampNow().slice(11)))}`
-    : `Not on the clock · ${nowClock()}`;
-}
-function clockBand(){
-  const on = activeShift();
-  return `<div class="clockband">
-    <div class="cbstate"><span class="d ${on ? 'on' : ''}"></span><span>${esc(clockBandStatus())}</span></div>
-    <div class="cbacts">
-      <button class="${on ? 'stop' : 'go'}" id="hero-clock">
-        ${(on ? I.out : I.tick)({ s:19, c:'#fff' })}${on ? 'Clock Out' : 'Clock In'}</button>
-      <button class="soft" id="hero-card">${I.wrench({ s:19, c:'#191510' })}New job card</button>
-    </div>
-  </div>`;
-}
-
-function shell(bodyHtml, opts){
-  const o = opts || {};
-  const head = o.home
-    ? `<div class="hhdr">
-         <button class="iconbtn" id="go-profile" aria-label="Profile">${I.burger()}</button>
-         <div class="brandrow">${MARK(138)}<span>Operator app</span></div>
-       </div>`
-    : `<div class="shdr">
-         <button class="back" id="go-back" aria-label="Back">${I.back({ s:22, c:'#f5c542' })}</button>
-         <h1>${esc(o.title || TITLES[S.screen] || '')}</h1>
-         <button class="iconbtn bal" style="margin:0" data-go="home" aria-label="Home">${I.home({ s:23 })}</button>
-       </div>`;
-
-  return `<div class="app">
-    ${head}
-    <div class="scroll">${bodyHtml}</div>
-    <nav class="tabs">
-      ${TABS.map(t => `<button data-go="${t.id}" class="${S.screen === t.id ? 'on' : ''}"${S.screen === t.id ? ' aria-current="page"' : ''}>
-        ${I[t.ico]({ s:22, c: S.screen === t.id ? '#16130f' : '#8b8373' })}${t.label}
-      </button>`).join('')}
-    </nav>
-  </div>
-  ${S.sheet || ''}${S.pdf || ''}`;
-}
-
-function paint(bodyHtml, opts){
-  const o = opts || {};
-  root.innerHTML = shell(bodyHtml, o);
-  $$('[data-go]').forEach(b => b.onclick = () => go(b.dataset.go));
-  if ($('#go-back')) $('#go-back').onclick = () => go(o.backTo || 'home');
-  if ($('#go-profile')) $('#go-profile').onclick = () => go('profile');
-  if ($('#hero-clock')) $('#hero-clock').onclick = () => {
-    try {
-      if (activeShift()) { const r = clockOut(); render(); toast(`Clocked out — ${fmtSpell(r.minutes)} on the clock`); }
-      else { clockIn(); render(); toast('Clocked in — have a good day'); }
-    } catch (e) { toast(e.message, 'bad'); }
-  };
-  if ($('#hero-card')) $('#hero-card').onclick = () => newJobCardSheet();
-  wireSheet();
-  wirePdf();
-}
-
-function go(screen){ S.screen = screen; S.q = ''; render(); }
-
-function openSheet(title, bodyHtml, footHtml, onWire){
-  S.sheet = `<div class="sheet" role="dialog" aria-label="${esc(title)}">
-    <header><button class="x" id="sh-x" aria-label="Close">${I.x({ s:20 })}</button>
-      <h2>${esc(title)}</h2><span style="width:40px;flex:0 0 40px"></span></header>
-    <div class="sbody">${bodyHtml}</div>
-    ${footHtml ? `<div class="sfoot">${footHtml}</div>` : ''}
-  </div>`;
-  S.sheetWire = onWire || null;
-  S.sheetKey = 'sheet:' + title;
-  delete S.scrollMem[S.sheetKey];
-  render();
-}
-function closeSheet(){
-  S.sheet = null; S.sheetWire = null; S.draft = null;
-  S.sheetKey = null; S.scrollMem = {};
-  render();
-}
-// Not every sheet carries the standard close button — the damage prompt has its
-// own back arrow — so neither is assumed to be there.
-function wireSheet(){
-  if (!S.sheet) return;
-  const x = $('#sh-x'); if (x) x.onclick = () => confirmDiscard();
-  const c = $('#sh-cancel'); if (c) c.onclick = () => confirmDiscard();
-  if (S.sheetWire) S.sheetWire();
-}
-// A half-filled docket is real work. Closing it asks first.
-function confirmDiscard(){
-  if (!S.draft || !S.draft.dirty) return closeSheet();
-  if (window.confirm('Leave this docket? Nothing on it has been saved yet.')) closeSheet();
-}
-
-// Every interaction repaints the whole screen, so the scroll position has to be
-// carried over by hand: a checklist row tapped two thirds of the way down a
-// docket must not throw the reader back to the top. Positions are remembered
-// per screen and per wizard step, so stepping back into a step returns to where
-// it was left rather than to its heading.
-function render(){
-  if (!S.user) return renderLogin();
-  const prev = S.painted;
-  if (prev) {
-    const sb = $('.sheet .sbody'), sc = $('.scroll');
-    if (sb && prev.sheetKey) S.scrollMem[prev.sheetKey] = sb.scrollTop;
-    if (sc) S.scrollMem['screen:' + prev.screen] = sc.scrollTop;
-  }
-
-  const views = {
-    home: viewHome, jobcards: viewJobCards,
-    ga1: viewGA1, fleet: viewFleet, profile: viewProfile
-  };
-  (views[S.screen] || viewHome)();
-
-  const sb = $('.sheet .sbody'), sc = $('.scroll');
-  if (sb && S.sheetKey && S.scrollMem[S.sheetKey] != null) sb.scrollTop = S.scrollMem[S.sheetKey];
-  if (sc && S.scrollMem['screen:' + S.screen] != null) sc.scrollTop = S.scrollMem['screen:' + S.screen];
-  S.painted = { screen: S.screen, sheetKey: S.sheetKey };
-}
-
-function wireSearch(){
-  const el = $('#q');
-  if (!el) return;
-  el.oninput = () => {
-    const pos = el.selectionStart;
-    S.q = el.value;
-    render();
-    const n = $('#q');
-    if (n) { n.focus(); n.setSelectionRange(pos, pos); }
-  };
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Home
-// ═══════════════════════════════════════════════════════════════════════════
-function viewHome(){
-  const d = dashboard();
-  const full = isFull();
-
-  // One banner at most, and it is whatever is most overdue a decision.
-  let banner = '';
-  if (d.ga1_expired) {
-    banner = `<button class="banner" data-bn="ga1">
-      <span class="ic">${I.alert({ s:22, c:'#a8341f' })}</span>
-      <span class="bt"><b>${plural(d.ga1_expired, 'machine')} out of date on GA1</b>
-        <span>A lifting appliance cannot be used for lifting on a lapsed thorough examination.</span></span>
-      ${I.chev({ s:18, c:'#a8341f' })}</button>`;
-  } else if (full && d.unassigned_cards) {
-    banner = `<button class="banner" data-bn="cards">
-      <span class="ic">${I.wrench({ s:22, c:'#a8341f' })}</span>
-      <span class="bt"><b>${plural(d.unassigned_cards, 'job card')} with nobody on it</b>
-        <span>Hand it to a fitter so it does not sit in the workshop.</span></span>
-      ${I.chev({ s:18, c:'#a8341f' })}</button>`;
-  } else if (d.my_cards) {
-    banner = `<button class="banner" data-bn="mine">
-      <span class="ic">${I.wrench({ s:22, c:'#a8341f' })}</span>
-      <span class="bt"><b>${plural(d.my_cards, 'job card')} on you</b>
-        <span>Pick up where you left off.</span></span>
-      ${I.chev({ s:18, c:'#a8341f' })}</button>`;
-  }
-
-  const stats = `<div class="stats">
-      <div class="stat ${d.open_cards ? 'warn' : ''}"><div class="n">${d.open_cards}</div><div class="l">Open cards</div></div>
-      <div class="stat ${d.ga1_expired ? 'warn' : ''}"><div class="n">${d.ga1_expired}</div><div class="l">GA1 out of date</div></div>
-      <div class="stat good"><div class="n">${d.in_yard}</div><div class="l">In the yard</div></div>
-    </div>`;
-
-  const menu = [
-    { id:'jobcards', ico:'wrench', t:'Job Cards',           s:'Service, repairs, breakdowns', n: full ? d.unassigned_cards : d.my_cards },
-    { id:'ga1',      ico:'cert',   t:'Plant Machinery GA1', s:'Thorough examination certs', n: d.ga1_expired },
-    { id:'fleet',    ico:'digger', t:'Fleet',               s:'Every machine, its GA1 and its cards' }
-  ];
-  const cards = menu.map((m, i) => {
-    const cls = i === 0 ? ' dark' : i === 1 ? ' warm' : '';
-    const ic = i === 0 ? '#f5c542' : i === 1 ? '#fff' : '#191510';
-    return `<button class="mcard${cls}" data-go="${m.id}">
-      <span class="ic">${I[m.ico]({ s:27, c:ic })}</span>
-      <span class="tx"><h3>${esc(m.t)}</h3><p>${esc(m.s)}</p></span>
-      ${m.n ? `<span class="n">${m.n}</span>` : `<span class="chev">${I.chev({ s:19, c:ic })}</span>`}
-    </button>`;
-  }).join('');
-
-  paint(`<h2 class="welcome">Morning, ${esc(first(S.user.name))}</h2>
-    ${clockBand()}${banner}${stats}${cards}`, { home:true });
-
-  $$('[data-bn]').forEach(b => b.onclick = () => {
-    const k = b.dataset.bn;
-    if (k === 'ga1') { S.filters.ga1 = 'flagged'; go('ga1'); }
-    else if (k === 'cards') { S.filters.jcScope = 'unassigned'; S.filters.jc = 'open'; go('jobcards'); }
-    else { S.filters.jcScope = 'mine'; S.filters.jc = 'open'; go('jobcards'); }
-  });
-}
-
 // ── Checklist ───────────────────────────────────────────────────────────────
 // Three buttons a row rather than a cycling box — a defect is too important to
 // reach by tapping twice and hoping.
@@ -1585,6 +1210,279 @@ function sigBlock(id, label, value){
     : `<div class="sigpad" id="${id}"><canvas></canvas>
          <div class="ph">${I.sig({ s:32, c:'#c9c1af' })}${esc(label)}</div></div>
        <button type="button" class="btn ghost sm" data-sigdone="${id}" style="width:100%;margin:10px 0 16px">Done signing</button>`;
+}
+
+// Raising one needs the job and, if there is somebody free, the person. Every
+// other field on the card belongs to whoever does the work.
+function createJobCard(p){
+  const m = machine(p.machine_id);
+  if (!m) throw new Error('Pick a machine');
+  if (!(p.fault || '').trim()) throw new Error('Say what is wrong with it');
+  const j = {
+    id: db.seq.jobcard_id++, ref: ref('JC', 'jobcard'), machine_id: m.id,
+    type: p.type || 'repair', location: p.location || 'workshop',
+    site_id: p.location === 'site' ? Number(p.site_id) : 1,
+    customer_id: p.customer_id ? Number(p.customer_id) : null,
+    site_contact: p.site_contact || null, fault: p.fault.trim(),
+    // A general-access user can only ever raise a card for themselves.
+    fitter_id: isFull() ? (p.fitter_id ? Number(p.fitter_id) : null) : S.user.id,
+    status: 'assigned', raised_by: S.user.id, raised_on: todayISO(), step: 1,
+    work_done: '', labour_hours: null,
+    parts: (p.parts || []).map(x => ({ name:x.name, qty:x.qty, allocated:true })),
+    checks: [], photos: [], signed_by: null, signature: null, po: null, completed_on: null
+  };
+  if (!j.fitter_id) j.status = 'unassigned';
+  db.jobcards.push(j);
+  return jobcardView(j);
+}
+function assignJobCard(id, fitterId){
+  const j = jobcard(id);
+  if (!j) throw new Error('Card not found');
+  if (!isFull()) throw new Error('Only a full access account can hand a card to somebody else');
+  j.fitter_id = Number(fitterId);
+  if (j.status === 'unassigned') j.status = 'assigned';
+  return jobcardView(j);
+}
+function saveJobCard(id, patch){
+  const j = jobcard(id);
+  if (!j) throw new Error('Card not found');
+  Object.assign(j, patch);
+  if (j.status === 'assigned' && (j.work_done || (j.checks || []).length)) j.status = 'draft';
+  return jobcardView(j);
+}
+// Finishing a card sends it to the office: the work is done, the money is not.
+function sendJobCardForPO(id, p){
+  const j = jobcard(id);
+  if (!j) throw new Error('Card not found');
+  if (!(j.work_done || '').trim()) throw new Error('Write up what was carried out first');
+  if (!j.labour_hours) throw new Error('Put the labour hours on it');
+  if (!p.signature) throw new Error('The card has to be signed off on site');
+  if (!(p.signed_by || '').trim()) throw new Error('Name the person signing');
+  j.signed_by = p.signed_by.trim(); j.signature = p.signature;
+  j.completed_on = todayISO(); j.status = 'awaiting_po'; j.step = 4;
+  // The machine is right again, so it goes back on the hire list — unless it is
+  // still out with a customer.
+  const m = machine(j.machine_id);
+  if (m.status === 'off_road' || m.status === 'service') { m.status = 'yard'; m.since = todayISO(); }
+  return jobcardView(j);
+}
+function closeJobCard(id, po){
+  const j = jobcard(id);
+  if (!j) throw new Error('Card not found');
+  if (!(po || '').trim()) throw new Error('The office needs a PO number to close it');
+  j.po = po.trim(); j.status = 'complete';
+  return jobcardView(j);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Login
+// ═══════════════════════════════════════════════════════════════════════════
+function renderLogin(err){
+  root.innerHTML = `<div class="login">
+    ${MARK(170, ';margin:0 auto 4px;display:block')}
+    <div class="sub">Operator app</div>
+    <label class="f"><span>Who are you?</span>
+      <select id="li-emp">${db.employees.map(e => `<option value="${e.id}">${esc(e.name)}</option>`).join('')}</select>
+    </label>
+    <label class="f"><span>PIN</span>
+      <input id="li-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
+    </label>
+    <button class="btn" id="li-go">Sign in</button>
+    <div class="err">${err ? esc(err) : ''}</div>
+    <div class="pinhint"><h4>Demo PIN</h4>
+      <p class="sub2">Tap a name to sign straight in — the PIN is 1111 for everyone.</p>
+      ${db.employees.map(e => `<button class="pinrow" data-pin="${e.id}"><span>${esc(e.name)}</span>
+        <span class="rl">${esc(e.access === 'full' ? 'Full access' : 'General')}</span>
+        <span class="no">${esc(e.pin)}</span></button>`).join('')}
+    </div>
+  </div>`;
+
+  const go = () => {
+    const who = emp(Number($('#li-emp').value));
+    if (!who || $('#li-pin').value !== who.pin)
+      return renderLogin('That PIN is not right — check the list below.');
+    signIn(who.id);
+  };
+  $('#li-go').onclick = go;
+  $('#li-pin').onkeydown = e => { if (e.key === 'Enter') go(); };
+  $$('[data-pin]').forEach(b => b.onclick = () => signIn(Number(b.dataset.pin)));
+  paintPins();
+}
+function signIn(id){
+  S.user = emp(id);
+  S.screen = 'home'; S.q = ''; S.sheet = null; S.pdf = null; S.draft = null;
+  S.filters = { jc:'open', jcScope: isFull() ? 'all' : 'mine', ga1:'flagged', fleet:'all' };
+  render();
+  paintPins();
+}
+function signOut(){
+  S.user = null; S.sheet = null; S.pdf = null; S.draft = null;
+  renderLogin();
+}
+// The list in the desktop rail signs in too, so the demo can be driven from
+// outside the handset while it is being shown on a screen.
+function paintPins(){
+  const box = $('#pinlist');
+  if (!box) return;
+  box.innerHTML = db.employees.map(e => `<button class="pin" data-outpin="${e.id}">
+    <span>${esc(e.name)}</span><span class="rl">${esc(e.role)}</span><span class="no">${esc(e.pin)}</span></button>`).join('');
+  $$('[data-outpin]').forEach(b => b.onclick = () => signIn(Number(b.dataset.outpin)));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Shell
+// ═══════════════════════════════════════════════════════════════════════════
+const TITLES = {
+  jobcards:'Job Cards', ga1:'Plant Machinery GA1', fleet:'Fleet', profile:'Profile'
+};
+const TABS = [
+  { id:'home',     label:'Home',    ico:'home'   },
+  { id:'jobcards', label:'Cards',   ico:'wrench' },
+  { id:'ga1',      label:'GA1',     ico:'cert'   },
+  { id:'fleet',    label:'Fleet',   ico:'digger' },
+  { id:'profile',  label:'Profile', ico:'user'   }
+];
+
+function shell(bodyHtml, opts){
+  const o = opts || {};
+  const head = o.home
+    ? `<div class="hhdr">
+         <button class="iconbtn" id="go-profile" aria-label="Profile">${I.burger()}</button>
+         <div class="brandrow">${MARK(138)}<span>Operator app</span></div>
+       </div>`
+    : `<div class="shdr">
+         <button class="back" id="go-back" aria-label="Back">${I.back({ s:22, c:'#f5c542' })}</button>
+         <h1>${esc(o.title || TITLES[S.screen] || '')}</h1>
+         <button class="iconbtn bal" style="margin:0" data-go="home" aria-label="Home">${I.home({ s:23 })}</button>
+       </div>`;
+
+  return `<div class="app">
+    ${head}
+    <div class="scroll">${bodyHtml}</div>
+    <nav class="tabs">
+      ${TABS.map(t => `<button data-go="${t.id}" class="${S.screen === t.id ? 'on' : ''}"${S.screen === t.id ? ' aria-current="page"' : ''}>
+        ${I[t.ico]({ s:22, c: S.screen === t.id ? '#16130f' : '#8b8373' })}${t.label}
+      </button>`).join('')}
+    </nav>
+  </div>
+  ${S.sheet || ''}${S.pdf || ''}`;
+}
+
+function paint(bodyHtml, opts){
+  const o = opts || {};
+  root.innerHTML = shell(bodyHtml, o);
+  $$('[data-go]').forEach(b => b.onclick = () => go(b.dataset.go));
+  if ($('#go-back')) $('#go-back').onclick = () => go(o.backTo || 'home');
+  if ($('#go-profile')) $('#go-profile').onclick = () => go('profile');
+  if ($('#hero-card')) $('#hero-card').onclick = () => newJobCardSheet();
+  wireSheet();
+  wirePdf();
+}
+
+function go(screen){ S.screen = screen; S.q = ''; render(); }
+
+function openSheet(title, bodyHtml, footHtml, onWire){
+  S.sheet = `<div class="sheet" role="dialog" aria-label="${esc(title)}">
+    <header><button class="x" id="sh-x" aria-label="Close">${I.x({ s:20 })}</button>
+      <h2>${esc(title)}</h2><span style="width:40px;flex:0 0 40px"></span></header>
+    <div class="sbody">${bodyHtml}</div>
+    ${footHtml ? `<div class="sfoot">${footHtml}</div>` : ''}
+  </div>`;
+  S.sheetWire = onWire || null;
+  S.sheetKey = 'sheet:' + title;
+  delete S.scrollMem[S.sheetKey];
+  render();
+}
+function closeSheet(){
+  S.sheet = null; S.sheetWire = null; S.draft = null;
+  S.sheetKey = null; S.scrollMem = {};
+  render();
+}
+// Not every sheet carries the standard close button — the damage prompt has its
+// own back arrow — so neither is assumed to be there.
+function wireSheet(){
+  if (!S.sheet) return;
+  const x = $('#sh-x'); if (x) x.onclick = () => confirmDiscard();
+  const c = $('#sh-cancel'); if (c) c.onclick = () => confirmDiscard();
+  if (S.sheetWire) S.sheetWire();
+}
+// A half-filled docket is real work. Closing it asks first.
+function confirmDiscard(){
+  if (!S.draft || !S.draft.dirty) return closeSheet();
+  if (window.confirm('Leave this docket? Nothing on it has been saved yet.')) closeSheet();
+}
+
+// Every interaction repaints the whole screen, so the scroll position has to be
+// carried over by hand: a checklist row tapped two thirds of the way down a
+// docket must not throw the reader back to the top. Positions are remembered
+// per screen and per wizard step, so stepping back into a step returns to where
+// it was left rather than to its heading.
+function render(){
+  if (!S.user) return renderLogin();
+  const prev = S.painted;
+  if (prev) {
+    const sb = $('.sheet .sbody'), sc = $('.scroll');
+    if (sb && prev.sheetKey) S.scrollMem[prev.sheetKey] = sb.scrollTop;
+    if (sc) S.scrollMem['screen:' + prev.screen] = sc.scrollTop;
+  }
+
+  const views = {
+    home: viewHome, jobcards: viewJobCards,
+    ga1: viewGA1, fleet: viewFleet, profile: viewProfile
+  };
+  (views[S.screen] || viewHome)();
+
+  const sb = $('.sheet .sbody'), sc = $('.scroll');
+  if (sb && S.sheetKey && S.scrollMem[S.sheetKey] != null) sb.scrollTop = S.scrollMem[S.sheetKey];
+  if (sc && S.scrollMem['screen:' + S.screen] != null) sc.scrollTop = S.scrollMem['screen:' + S.screen];
+  S.painted = { screen: S.screen, sheetKey: S.sheetKey };
+}
+
+function wireSearch(){
+  const el = $('#q');
+  if (!el) return;
+  el.oninput = () => {
+    const pos = el.selectionStart;
+    S.q = el.value;
+    render();
+    const n = $('#q');
+    if (n) { n.focus(); n.setSelectionRange(pos, pos); }
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Home
+// ═══════════════════════════════════════════════════════════════════════════
+function viewHome(){
+  const d = dashboard();
+  const full = isFull();
+
+  const stats = `<div class="stats">
+      <div class="stat ${d.open_cards ? 'warn' : ''}"><div class="n">${d.open_cards}</div><div class="l">Open cards</div></div>
+      <div class="stat ${d.ga1_expired ? 'warn' : ''}"><div class="n">${d.ga1_expired}</div><div class="l">GA1 out of date</div></div>
+      <div class="stat good"><div class="n">${d.in_yard}</div><div class="l">In the yard</div></div>
+    </div>`;
+
+  const menu = [
+    { id:'jobcards', ico:'wrench', t:'Job Cards',           s:'Service, repairs, breakdowns', n: full ? d.unassigned_cards : d.my_cards },
+    { id:'ga1',      ico:'cert',   t:'Plant Machinery GA1', s:'Thorough examination certs', n: d.ga1_expired },
+    { id:'fleet',    ico:'digger', t:'Fleet',               s:'Every machine, its GA1 and its cards' }
+  ];
+  const cards = menu.map((m, i) => {
+    const cls = i === 0 ? ' dark' : i === 1 ? ' warm' : '';
+    const ic = i === 0 ? '#f5c542' : i === 1 ? '#fff' : '#191510';
+    return `<button class="mcard${cls}" data-go="${m.id}">
+      <span class="ic">${I[m.ico]({ s:27, c:ic })}</span>
+      <span class="tx"><h3>${esc(m.t)}</h3><p>${esc(m.s)}</p></span>
+      ${m.n ? `<span class="n">${m.n}</span>` : `<span class="chev">${I.chev({ s:19, c:ic })}</span>`}
+    </button>`;
+  }).join('');
+
+  paint(`<h2 class="welcome">Morning, ${esc(first(S.user.name))}</h2>
+    <button class="btn" id="hero-card" style="margin-bottom:18px">
+      ${I.plus({ s:19, c:'#f5c542' })} New job card</button>
+    ${stats}${cards}`, { home:true });
+
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2506,7 +2404,6 @@ function viewProfile(){
     <div class="readout">
       <div class="kv"><span class="k">Mobile</span><span class="v">${esc(S.user.mobile)}</span></div>
       <div class="kv"><span class="k">Open cards</span><span class="v">${mine}</span></div>
-      <div class="kv"><span class="k">On the clock</span><span class="v">${activeShift() ? 'Yes, since ' + fmtClock(activeShift().start_at.slice(11)) : 'No'}</span></div>
     </div>
 
     <div class="slabel sp">The demo</div>
