@@ -388,6 +388,58 @@ textarea{min-height:96px;resize:vertical}
 .cltot span{display:block;font-size:11px;color:var(--ink-3);font-weight:700;margin-top:3px}
 .cltot .p b{color:var(--green)} .cltot .f b{color:var(--red)}
 
+/* ── GA2 weekly check ────────────────────────────────────────────────────────
+   Three columns — the item, whether it was checked, and a remark against it —
+   with the sections of the walk-round as banded rows between them, following
+   the wireframe. */
+.g2meta{display:flex;flex-wrap:wrap;gap:6px 24px;background:var(--card);border-radius:13px;
+  padding:14px 15px;margin-bottom:18px;box-shadow:var(--shadow)}
+.g2meta div{font-size:14px;min-width:132px}
+.g2meta span{color:var(--ink-3)}
+.g2meta b{font-weight:700}
+.g2tbl{border:1px solid var(--line);border-radius:11px;overflow:hidden;background:#fff;margin-bottom:14px}
+.g2head{display:flex;background:var(--char);color:var(--gold);font-size:11.5px;font-weight:750;
+  letter-spacing:.07em;text-transform:uppercase;padding:11px 12px;gap:8px}
+.g2head .i{flex:1}
+.g2head .c{flex:0 0 58px;text-align:center}
+.g2head .r{flex:0 0 96px;text-align:center}
+.g2sec{background:var(--grey-soft);font-size:12px;font-weight:750;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink-2);padding:9px 12px;border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line)}
+.g2row{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.g2row:last-child{border-bottom:0}
+.g2row .i{flex:1;font-size:14px;line-height:1.35}
+.g2row .c{flex:0 0 58px;display:grid;place-items:center}
+.g2row .r{flex:0 0 96px}
+.g2row .r input{padding:9px 10px;font-size:13px;border-radius:8px;background:#f6f3ec;border-color:transparent}
+.g2row .r input:focus{background:#fff;border-color:var(--brand)}
+.g2row.bad{background:#fdf3f1}
+.g2box{width:30px;height:30px;border-radius:8px;border:2px solid var(--char);background:#fff;
+  display:grid;place-items:center;padding:0}
+.g2box svg{opacity:0}
+.g2box.on{background:var(--green);border-color:var(--green)}
+.g2box.on svg{opacity:1}
+.g2all{width:100%;background:var(--green);color:#fff;border:0;border-radius:12px;padding:15px;
+  font-size:16px;font-weight:750;display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:16px}
+.g2all.off{background:var(--grey-soft);color:var(--ink-2)}
+.g2nil{display:flex;align-items:center;gap:13px;width:100%;background:var(--card);border:0;
+  border-radius:12px;padding:14px 15px;margin-bottom:12px;box-shadow:var(--shadow);text-align:left;color:var(--ink)}
+.g2nil .bx{width:34px;height:34px;flex:0 0 34px;border:2px solid var(--char);border-radius:6px;
+  display:grid;place-items:center;background:#fff}
+.g2nil b{font-size:16px;font-weight:700;display:block}
+.g2nil span{font-size:13px;color:var(--ink-3)}
+.g2nil.on .bx{background:var(--green);border-color:var(--green)}
+
+/* Submissions list — the week banner over the cards */
+.weekbar{display:flex;align-items:baseline;gap:12px;margin:2px 0 12px}
+.weekbar .lbl{font-size:12px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);font-weight:750}
+.weekbar .rng{margin-left:auto;font-size:12.5px;color:var(--ink-3);font-weight:650;white-space:nowrap}
+/* The sticky "new" action the wireframe puts across the bottom of the list */
+.newbar{position:absolute;left:0;right:0;bottom:calc(66px + env(safe-area-inset-bottom));
+  padding:10px 18px calc(10px);z-index:25;
+  background:linear-gradient(transparent,var(--bg) 34%)}
+.newbar .btn{box-shadow:0 6px 18px rgba(22,19,15,.22)}
+
 /* ── Damage diagram ──────────────────────────────────────────────────────────
    A silhouette of the machine type, tapped to drop a numbered pin. The overlay
    is the hit area; the pin sits at the percentage of the box that was tapped,
@@ -802,7 +854,7 @@ function makeSeed(){ return {
       checks:[], photos:[], signed_by:'Johnny McGuirk', signature:null, po:'MH-INT-0040', completed_on:D(-8) },
     { id:3, ref:'JC-0041', machine_id:5, hire_id:null, type:'service', location:'workshop', site_id:1, customer_id:null,
       site_contact:null, fault:'500 hour service due. Also reported slow on the tip ram.',
-      fitter_id:1, status:'draft', raised_by:1, raised_on:D(-2), step:2,
+      fitter_id:1, status:'draft', raised_by:1, raised_on:D(-2), step:2, from_check_id:7,
       work_done:'', labour_hours:null,
       parts:[{ name:'Engine oil filter', qty:1, allocated:true },{ name:'Fuel filter', qty:1, allocated:true },{ name:'Engine oil 15W40 (20L)', qty:1, allocated:true }],
       checks:[], photos:[], signed_by:null, signature:null, po:null, completed_on:null },
@@ -819,8 +871,8 @@ function makeSeed(){ return {
       labour_hours:3, parts:[{ name:'Door glass — KX037 offside', qty:1, allocated:true },{ name:'Rear combination lamp', qty:1, allocated:true }],
       checks:[], photos:[], signed_by:'Johnny McGuirk', signature:null, po:'GH-5510-DMG', completed_on:D(-5) }
   ],
-  seq: { hire:422, on_docket:1046, off_docket:312, jobcard:43,
-          hire_id:7, docket_id:8, jobcard_id:6, shift_id:1 }
+  seq: { hire:422, on_docket:1046, off_docket:312, jobcard:43, check:419,
+          hire_id:7, docket_id:8, jobcard_id:6, check_id:9, shift_id:1 }
 }; }
 
 // The dockets already on file. Only the parts that differ are written out —
@@ -865,6 +917,29 @@ const CERT_SEED = [
   // MH-531 Manitou MT625 — in date.
   { id:6, machine_id:9, cert_no:'MPI-25-0377', examined_on:D(-95), next_due:D(270), interval_months:12,
     swl:'2,500 kg at 1.2 m / 800 kg at full reach', reason:'periodic', safe:true, defects:null }
+];
+
+// Weekly checks already filed. Written as day offsets so this week is always
+// this week; the items are filled out at load — all checked apart from the
+// defects named here.
+const CHECK_SEED = [
+  { id:1, ref:'G2-0418', machine_id:2,  employee_id:1, days_ago:0, time:'07:52', meter:4106,
+    fails:[], remarks:null },
+  { id:2, ref:'G2-0417', machine_id:8,  employee_id:1, days_ago:1, time:'08:14', meter:3744,
+    fails:[{ id:6, remark:'GA1 in the cab is out of date — reported to the office.' }],
+    remarks:'Machine is out with Conroy. Checked on site.' },
+  { id:3, ref:'G2-0416', machine_id:4,  employee_id:1, days_ago:2, time:'07:40', meter:3320,
+    fails:[], remarks:null },
+  { id:4, ref:'G2-0415', machine_id:7,  employee_id:1, days_ago:5, time:'08:05', meter:1188,
+    fails:[{ id:15, remark:'Nearside work light not working. Bulb ordered.' }], remarks:null },
+  { id:5, ref:'G2-0414', machine_id:1,  employee_id:1, days_ago:6, time:'07:48', meter:2841,
+    fails:[], remarks:'Back in the yard, washed down.' },
+  { id:6, ref:'G2-0411', machine_id:2,  employee_id:1, days_ago:7, time:'07:55', meter:4032,
+    fails:[], remarks:null },
+  { id:7, ref:'G2-0409', machine_id:5,  employee_id:1, days_ago:9, time:'09:10', meter:5218,
+    fails:[{ id:23, remark:'Tip ram slow and drifting under load. Job card raised.' }], remarks:null },
+  { id:8, ref:'G2-0406', machine_id:9,  employee_id:1, days_ago:13, time:'08:20', meter:2015,
+    fails:[], remarks:null }
 ];
 
 // Who carries out the examinations. One place to change it.
@@ -961,6 +1036,20 @@ function loadDemoData(){
   db.service_items = SERVICE_ITEMS.map(i => Object.assign({}, i));
   db.dockets = JSON.parse(JSON.stringify(DOCKET_SEED)).map(hydrateDocket);
   db.certs = JSON.parse(JSON.stringify(CERT_SEED));
+  db.checks = JSON.parse(JSON.stringify(CHECK_SEED)).map(c => {
+    const m = db.machines.find(x => x.id === c.machine_id);
+    const failMap = new Map((c.fails || []).map(f => [f.id, f.remark]));
+    c.date = addDays(todayISO(), -c.days_ago);
+    c.items = GA2_ITEMS.map(it => failMap.has(it.id)
+      ? { item_id:it.id, checked:false, remark:failMap.get(it.id) }
+      : { item_id:it.id, checked:true, remark:null });
+    c.nil_defects = !failMap.size;
+    c.photos = [{ tag:'Machine', src:fakePhoto('Weekly check', m.plant_no, c.date) }];
+    c.signature = fakeSig((db.employees.find(e => e.id === c.employee_id) || {}).name);
+    c.submitted_at = c.date + 'T' + c.time + ':00';
+    delete c.fails; delete c.days_ago;
+    return c;
+  });
   db.shifts = [];
 
   // Job cards that are finished were signed, so give them a signature.
@@ -995,6 +1084,7 @@ const machine = id => byId('machines', id);
 const hire    = id => byId('hires', id);
 const docket  = id => byId('dockets', id);
 const cert    = id => byId('certs', id);
+const check   = id => byId('checks', id);
 const jobcard = id => byId('jobcards', id);
 const ref = (prefix, key) => `${prefix}-${String(db.seq[key]++).padStart(4, '0')}`;
 
@@ -1029,6 +1119,51 @@ const JSTATUS = {
   awaiting_po: { label:'Awaiting PO', cls:'blue'   },
   complete:    { label:'Complete',    cls:'grey'   }
 };
+// ── GA2 · the weekly plant check ───────────────────────────────────────────
+// The walk-round the operator does on the machine every week. Grouped the way
+// it is walked — sit in it, look at the fluids, go round it, then run it — so
+// nobody is climbing up and down the machine to follow the form.
+const GA2_SECTIONS = [
+  { title:'In Cab', items:[
+    { id:1,  label:'Good visibility from the cab — windows and mirrors clean and undamaged' },
+    { id:2,  label:'Controls, seat and seat belt adjusted and working' },
+    { id:3,  label:'Horn, reversing alarm and beacon operating' },
+    { id:4,  label:'Wipers, washer and demister operating' },
+    { id:5,  label:'Fire extinguisher present, in date and secure' },
+    { id:6,  label:'Operator handbook and GA1 in the cab' }
+  ]},
+  { title:'Engine & Fluids', items:[
+    { id:7,  label:'Engine oil level' },
+    { id:8,  label:'Coolant level and strength' },
+    { id:9,  label:'Hydraulic oil level' },
+    { id:10, label:'Fuel level, water trap drained, no leaks' },
+    { id:11, label:'Air filter and restriction indicator' },
+    { id:12, label:'Belts and hoses — no chafing, no leaks' }
+  ]},
+  { title:'Walk-round', items:[
+    { id:13, label:'Tracks or tyres and undercarriage — tension, wear, pressures' },
+    { id:14, label:'Guards, covers and panels secure' },
+    { id:15, label:'Lights and work lights operating' },
+    { id:16, label:'Hydraulic rams, hoses and couplings — no leaks or damage' },
+    { id:17, label:'Bucket or attachment, pins and retainers secure' },
+    { id:18, label:'Quick hitch — locking pin engaged and check carried out' },
+    { id:19, label:'Greasing — all points' },
+    { id:20, label:'ROPS / FOPS undamaged — no cracks, no unauthorised repair' },
+    { id:21, label:'Steps, handrails and access clean and secure' },
+    { id:22, label:'Chassis, boom and dipper — no cracks or damage' }
+  ]},
+  { title:'Function test', items:[
+    { id:23, label:'Hydraulic functions smooth, no drift under load' },
+    { id:24, label:'Service brake and parking brake' },
+    { id:25, label:'Steering, slew and travel controls' },
+    { id:26, label:'Warning lights out after start-up' },
+    { id:27, label:'Lifting points, hooks and shackles — where used for lifting' }
+  ]}
+];
+const GA2_ITEMS = GA2_SECTIONS.flatMap(s => s.items);
+const ga2Item = id => GA2_ITEMS.find(i => i.id === id);
+const GA2_PHOTO_MAX = 6;
+
 // ── GA1 ────────────────────────────────────────────────────────────────────
 // The GA1 is the report of thorough examination of a *lifting appliance* under
 // the General Application Regulations. That is the part worth getting right in
@@ -1210,6 +1345,44 @@ const certsView = filter => db.machines.map(certView)
   .sort((a, b) => CERT_ORDER[a.key] - CERT_ORDER[b.key] ||
     (a.machine.plant_no < b.machine.plant_no ? -1 : 1));
 
+// A filed weekly check, read back.
+function checkView(c){
+  const m = machine(c.machine_id);
+  const fails = c.items.filter(i => !i.checked);
+  return Object.assign({}, c, {
+    plant_no: m ? m.plant_no : 'No machine',
+    make_model: m ? m.make_model : '—',
+    machine_type: m ? m.type : 'generic',
+    machine_label: m ? `${m.plant_no} — ${m.make_model}` : 'No machine',
+    operator_name: (emp(c.employee_id) || {}).name || '—',
+    fails, fail_count: fails.length,
+    checked_count: c.items.filter(i => i.checked).length,
+    week_start: mondayOf(c.date),
+    filename: `${c.ref}-${m ? m.plant_no : 'nomachine'}.pdf`
+  });
+}
+const checksView = () => db.checks.map(checkView)
+  .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : (a.time < b.time ? 1 : -1)));
+const checksFor = mid => db.checks.filter(c => c.machine_id === mid).map(checkView)
+  .sort((a, b) => a.date < b.date ? 1 : -1);
+
+// Has this machine been checked in the week it is now? That is the whole point
+// of a weekly check, so it is a first-class answer rather than a count.
+function ga2Standing(m){
+  const monday = mondayOf(todayISO());
+  const mine = checksFor(m.id);
+  const thisWeek = mine.find(c => c.week_start === monday) || null;
+  const last = mine[0] || null;
+  return {
+    done: !!thisWeek, check: thisWeek, last,
+    days_since: last ? daysBetween(last.date, todayISO()) : null,
+    label: thisWeek ? `Checked ${fmtShort(thisWeek.date)}`
+      : last ? `Not checked this week — last ${fmtShort(last.date)}`
+      : 'Never checked',
+    cls: thisWeek ? 'green' : 'tomato'
+  };
+}
+
 function dashboard(){
   const ms = db.machines;
   return {
@@ -1222,7 +1395,9 @@ function dashboard(){
     open_cards: db.jobcards.filter(j => j.status !== 'complete').length,
     dockets_today: db.dockets.filter(d => d.date === todayISO()).length,
     ga1_expired: db.machines.map(certView).filter(c => c.key === 'expired' || c.key === 'none').length,
-    ga1_due: db.machines.map(certView).filter(c => c.key === 'due').length
+    ga1_due: db.machines.map(certView).filter(c => c.key === 'due').length,
+    ga2_week: db.checks.filter(c => mondayOf(c.date) === mondayOf(todayISO())).length,
+    ga2_missing: db.machines.filter(m => !ga2Standing(m).done).length
   };
 }
 
@@ -1306,6 +1481,8 @@ const I = {
   reset:  o => sv('<path d="M4 12a8 8 0 108-8 8 8 0 00-6 2.7L4 9"/><path d="M4 4v5h5"/>', o),
   phone:  o => sv('<path d="M5 3h4l2 5-3 2a12 12 0 006 6l2-3 5 2v4a1 1 0 01-1 1A17 17 0 014 4a1 1 0 011-1z"/>', o),
   box:    o => sv('<path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>', o),
+  gal:    o => sv('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M21 16l-5.5-5.5L6 20"/>', o),
+  clip:   o => sv('<rect x="4" y="4" width="16" height="17" rx="2"/><path d="M9 4h6v3H9z"/><path d="M8.5 13l2.5 2.5 4.5-4.5"/>', o),
   cert:   o => sv('<path d="M19 13V4a1 1 0 00-1-1H6a1 1 0 00-1 1v16a1 1 0 001 1h5"/><path d="M8 8h8M8 12h5"/><circle cx="17" cy="17" r="3.4"/><path d="M15 20l-.6 2.4 2.6-1.3 2.6 1.3L19 20"/>', o),
   hand:   o => sv('<path d="M9 11V5.5a1.5 1.5 0 013 0V11"/><path d="M12 11V4.5a1.5 1.5 0 013 0V11"/><path d="M15 11V6.5a1.5 1.5 0 013 0V13a8 8 0 01-8 8H9a5 5 0 01-5-5v-3a1.5 1.5 0 013 0"/>', o)
 };
@@ -1316,7 +1493,7 @@ const S = {
   screen: 'home', sheet: null, sheetWire: null, q: '',
   pdf: null, pdfWire: null,
   sheetKey: null, painted: null, scrollMem: {},
-  filters: { hire:'on_hire', jc:'open', jcScope:'mine', dk:'all', ga1:'flagged' },
+  filters: { hire:'on_hire', jc:'open', jcScope:'mine', dk:'all', fleet:'all' },
   draft: null          // the docket or job card being filled in
 };
 
@@ -1402,6 +1579,47 @@ function createOnHire(p){
     `On hire ${d.ref} — ${fails.map(f => CONDITION_ITEMS.find(i => i.id === f.item_id).label).join('; ')}.`);
 
   return { hire: hireView(h), docket: docketView(d), card };
+}
+
+// Filing a weekly check. Anything left unchecked with a remark against it is a
+// defect, and a defect on a machine is a job card — not a note nobody reads.
+function submitGA2(p){
+  const m = p.machine_id ? machine(Number(p.machine_id)) : null;
+  if (!m) throw new Error('Pick the machine the check is on');
+  if (p.meter === '' || p.meter == null) throw new Error('Put the hour meter reading in');
+  if (Number(p.meter) < m.hours) throw new Error(`The meter cannot read less than the ${num(m.hours)} already on it`);
+  const unanswered = p.items.filter(i => !i.checked && !(i.remark || '').trim());
+  if (unanswered.length) throw new Error(`${plural(unanswered.length, 'item')} neither checked nor remarked on`);
+  if (!p.signature) throw new Error('The check has to be signed');
+
+  const fails = p.items.filter(i => !i.checked);
+  const c = {
+    id: db.seq.check_id++, ref: 'G2-' + String(db.seq.check++).padStart(4, '0'),
+    machine_id: m.id, employee_id: S.user.id,
+    date: todayISO(), time: nowClock(),
+    meter: Number(p.meter), remarks: p.remarks || null,
+    items: p.items.map(i => ({ item_id:i.item_id, checked:i.checked, remark:i.remark || null })),
+    nil_defects: !fails.length,
+    photos: p.photos.slice(), signature: p.signature, submitted_at: stampNow()
+  };
+  db.checks.push(c);
+  m.hours = Math.max(m.hours, c.meter);
+
+  let card = null;
+  if (fails.length) {
+    const j = {
+      id: db.seq.jobcard_id++, ref: ref('JC', 'jobcard'), machine_id: m.id, hire_id: null,
+      type:'repair', location:'workshop', site_id:1, customer_id:null, site_contact:null,
+      fault: `Weekly check ${c.ref} — ` + fails.map(f =>
+        `${ga2Item(f.item_id).label}${f.remark ? ': ' + f.remark : ''}`).join('; '),
+      fitter_id: null, status:'unassigned', raised_by: S.user.id, raised_on: todayISO(), step:1,
+      work_done:'', labour_hours:null, parts:[], checks:[], photos:[],
+      signed_by:null, signature:null, po:null, completed_on:null, from_check_id: c.id
+    };
+    db.jobcards.push(j);
+    card = jobcardView(j);
+  }
+  return Object.assign(checkView(c), { card });
 }
 
 // Extending. The customer wants it longer, so the date it comes off charge moves
@@ -1602,7 +1820,7 @@ function renderLogin(err){
 function signIn(id){
   S.user = emp(id);
   S.screen = 'home'; S.q = ''; S.sheet = null; S.pdf = null; S.draft = null;
-  S.filters = { hire:'on_hire', jc:'open', jcScope: isFull() ? 'all' : 'mine', dk:'all', ga1:'flagged' };
+  S.filters = { hire:'on_hire', jc:'open', jcScope: isFull() ? 'all' : 'mine', dk:'all', fleet:'all' };
   render();
   paintPins();
 }
@@ -1625,14 +1843,14 @@ function paintPins(){
 // ═══════════════════════════════════════════════════════════════════════════
 const TITLES = {
   hires:'On Hire / Off Hire', jobcards:'Job Cards', dockets:'Dockets',
-  ga1:'Plant Machinery GA1', profile:'Profile'
+  ga2:'Plant Weekly Check', fleet:'Fleet', profile:'Profile'
 };
 const TABS = [
   { id:'home',     label:'Home',    ico:'home'   },
   { id:'hires',    label:'Hires',   ico:'swap'   },
   { id:'jobcards', label:'Cards',   ico:'wrench' },
-  { id:'dockets',  label:'Dockets', ico:'doc'    },
-  { id:'ga1',      label:'GA1',     ico:'cert'   },
+  { id:'ga2',      label:'GA2',     ico:'clip'   },
+  { id:'fleet',    label:'Fleet',   ico:'digger' },
   { id:'profile',  label:'Profile', ico:'user'   }
 ];
 
@@ -1745,7 +1963,7 @@ function render(){
 
   const views = {
     home: viewHome, hires: viewHires, jobcards: viewJobCards,
-    dockets: viewDockets, ga1: viewGA1, profile: viewProfile
+    dockets: viewDockets, ga2: viewGA2, fleet: viewFleet, profile: viewProfile
   };
   (views[S.screen] || viewHome)();
 
@@ -1813,8 +2031,9 @@ function viewHome(){
   const menu = [
     { id:'hires',    ico:'swap',   t:'On Hire / Off Hire', s:'Put a machine out, take it back', n: d.past_due },
     { id:'jobcards', ico:'wrench', t:'Job Cards',          s:'Service, repairs, breakdowns', n: full ? d.unassigned_cards : d.my_cards },
-    { id:'dockets',  ico:'doc',    t:'Dockets',            s:'Every docket signed, on file' },
-    { id:'ga1',      ico:'cert',   t:'Plant Machinery GA1', s:'Thorough examination certs', n: d.ga1_expired }
+    { id:'ga2',      ico:'clip',   t:'Plant Weekly Check', s:'The GA2 walk-round, week by week', n: d.ga2_missing },
+    { id:'fleet',    ico:'digger', t:'Fleet',              s:'Every machine, its GA1s and GA2s', n: d.ga1_expired },
+    { id:'dockets',  ico:'doc',    t:'Dockets',            s:'Every docket signed, on file' }
   ];
   const cards = menu.map((m, i) => {
     const cls = i === 0 ? ' dark' : i === 1 ? ' warm' : '';
@@ -3433,6 +3652,7 @@ function openJobCard(id){
   const j = jobcardView(jobcard(id));
   const m = machineView(machine(j.machine_id));
   const src = j.from_docket_id ? docketView(docket(j.from_docket_id)) : null;
+  const chk = j.from_check_id ? checkView(check(j.from_check_id)) : null;
   const mine = j.fitter_id === S.user.id;
   const steps = (j.status === 'complete' || j.status === 'awaiting_po') ? 4 : j.step;
 
@@ -3475,6 +3695,15 @@ function openJobCard(id){
           ${src.chargeable ? `<span class="pill tomato">${plural(src.chargeable, 'chargeable')}</span>` : ''}
           <span class="pill grey">Photos and checklist on it</span></div></button>` : ''}
 
+    ${chk ? `<div class="slabel sp">Came off a weekly check</div>
+      <button class="lcard" data-chk="${chk.id}">
+        <div class="top"><span class="ic-sm">${I.clip({ s:20, c:'#8a6410' })}</span>
+          <div style="flex:1;min-width:0"><div class="t">${esc(chk.ref)}</div>
+            <div class="s">GA2 · ${fmtDate(chk.date)} at ${esc(chk.time)} · ${esc(first(chk.operator_name))}</div></div>
+          ${I.chev({ s:18, c:'#8b8373' })}</div>
+        <div class="tags"><span class="pill red">${plural(chk.fail_count, 'defect')}</span>
+          <span class="pill grey">${num(chk.meter)} hrs</span></div></button>` : ''}
+
     ${j.work_done ? `<div class="slabel sp">Work carried out</div>
       <div class="note">${esc(j.work_done)}</div>
       <div class="readout">
@@ -3509,6 +3738,7 @@ function openJobCard(id){
       if ($('#jv-assign')) $('#jv-assign').onclick = () => assignSheet(j.id);
       if ($('#jv-po')) $('#jv-po').onclick = () => poSheet(j.id);
       $$('[data-dk]').forEach(b => b.onclick = () => openDocket(Number(b.dataset.dk)));
+      $$('[data-chk]').forEach(b => b.onclick = () => openCheckDoc(Number(b.dataset.chk)));
     });
 }
 
@@ -3555,6 +3785,12 @@ function jobCardStep(){
       </div>
       <div class="slabel">The fault as reported</div>
       <div class="note">${esc(j.fault)}</div>
+      ${j.from_check_id ? `<div class="slabel sp">The weekly check it came off</div>
+        <button class="lcard" data-chk2="${j.from_check_id}">
+          <div class="top"><span class="ic-sm">${I.clip({ s:20, c:'#8a6410' })}</span>
+            <div style="flex:1;min-width:0"><div class="t">${esc(checkView(check(j.from_check_id)).ref)}</div>
+              <div class="s">The walk-round the defect was found on</div></div>
+            ${I.chev({ s:18, c:'#8b8373' })}</div></button>` : ''}
       ${src ? `<div class="slabel sp">The docket it came off</div>
         <button class="lcard" data-dk="${src.id}">
           <div class="top"><span class="ic-sm">${I.doc({ s:20, c:'#8a6410' })}</span>
@@ -3565,7 +3801,10 @@ function jobCardStep(){
         ${d.parts.filter(x => x.allocated).map(x => `<div class="dmgitem">
           <span class="no" style="background:var(--brand-2)">${x.qty}</span>
           <span class="dx"><b>${esc(x.name)}</b><span>On the card before you opened it</span></span></div>`).join('')}` : ''}`;
-    wire = () => $$('[data-dk]').forEach(b => b.onclick = () => openDocket(Number(b.dataset.dk)));
+    wire = () => {
+      $$('[data-dk]').forEach(b => b.onclick = () => openDocket(Number(b.dataset.dk)));
+      $$('[data-chk2]').forEach(b => b.onclick = () => openCheckDoc(Number(b.dataset.chk2)));
+    };
   }
 
   if (d.step === 1) {
@@ -3729,66 +3968,269 @@ function jobCardStep(){
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Plant Machinery GA1
-// Search the fleet, pick a machine, read its report of thorough examination.
+// GA2 — the weekly plant check
+// The submissions list, then the check itself. Laid out to the wireframes:
+// a searchable list of what has been filed this week, each row opening the
+// filed report, and a new check across the bottom.
 // ═══════════════════════════════════════════════════════════════════════════
-function viewGA1(){
-  const f = S.filters.ga1;
+function viewGA2(){
+  const monday = mondayOf(todayISO());
   const q = S.q.toLowerCase();
-  let list = certsView(f);
-  if (q) list = list.filter(cv => (cv.machine.plant_no + ' ' + cv.machine.make_model + ' ' +
-    cv.machine.serial + ' ' + (cv.cert ? cv.cert.cert_no : '')).toLowerCase().includes(q));
+  const all = checksView();
+  const week = all.filter(c => c.week_start === monday);
+  const earlier = all.filter(c => c.week_start !== monday);
+  const match = c => !q || (c.ref + ' ' + c.machine_label + ' ' + c.operator_name).toLowerCase().includes(q);
+  const missing = db.machines.filter(m => !ga2Standing(m).done);
 
-  const all = db.machines.map(certView);
-  const chips = [['flagged','Needs attention'],['valid','In date'],['due','Due soon'],
-    ['expired','Out of date'],['not_required','No GA1 needed'],['all','All plant']]
-    .map(([k, l]) => `<button class="chip ${f===k?'on':''}" data-gf="${k}">${l}</button>`).join('');
-
-  const rows = list.map(cv => {
-    const m = cv.machine;
-    const bad = cv.key === 'expired' || cv.key === 'none';
-    return `<button class="lcard ${bad ? 'flag' : ''}" data-ga1="${m.id}">
+  const card = c => `<div class="lcard ${c.fail_count ? 'flag' : ''}">
       <div class="top">
-        <span class="ic-sm">${I.cert({ s:20, c:'#8a6410' })}</span>
         <div style="flex:1;min-width:0">
-          <div class="t">${esc(m.plant_no)} — ${esc(m.make_model)}</div>
-          <div class="s">${cv.required
-            ? (cv.cert ? esc(cv.cert.cert_no) + ' · next due ' + fmtDate(cv.cert.next_due) : 'No report on file')
-            : esc(m.type.charAt(0).toUpperCase() + m.type.slice(1)) + ' — outside the lifting appliance rules'}</div>
+          <div class="t" style="font-size:19px">${esc(c.plant_no)}</div>
+          <div class="s">${esc(DOW[(dt(c.date).getDay() + 6) % 7].slice(0, 3))}, ${fmtDate(c.date)} at ${esc(c.time)}</div>
+          <div class="s" style="margin-top:6px"><span style="color:var(--ink-3)">Operator</span>
+            <b style="color:var(--ink);font-weight:700">${esc(first(c.operator_name))}</b></div>
         </div>
-        ${I.chev({ s:18, c:'#8b8373' })}
       </div>
       <div class="tags">
-        <span class="pill ${cv.state_cls}">${esc(cv.state_label)}</span>
-        ${cv.required ? `<span class="pill grey">${esc(cv.standing)}</span>` : ''}
-        ${cv.on_hire_now ? `<span class="pill ${bad ? 'red' : 'blue'}">${bad ? I.alert({ s:12, c:'#c8352a' }) : ''} On hire · ${esc(cv.customer_name)}</span>` : ''}
+        ${c.nil_defects ? '<span class="pill green">NIL defects</span>'
+          : `<span class="pill red">${plural(c.fail_count, 'defect')}</span>`}
+        <span class="pill grey">${num(c.meter)} hrs</span>
+        <span class="pill grey">${c.checked_count}/${GA2_ITEMS.length} checked</span>
       </div>
-    </button>`;
-  }).join('');
+      <div class="cardbtns">
+        <button class="btn sm" data-cpdf="${c.id}">${I.doc({ s:16, c:'#f5c542' })} View PDF</button>
+        <button class="btn ghost sm" data-cm="${c.machine_id}">The machine</button>
+      </div>
+    </div>`;
 
-  const outWithLapsed = all.filter(cv => cv.on_hire_now && (cv.key === 'expired' || cv.key === 'none'));
+  const weekRows = week.filter(match).map(card).join('');
+  const earlierRows = earlier.filter(match).map(card).join('');
 
   paint(`
     <div class="stats">
-      <div class="stat good"><div class="n">${all.filter(c => c.key === 'valid').length}</div><div class="l">In date</div></div>
-      <div class="stat ${all.filter(c => c.key === 'due').length ? 'warn' : ''}"><div class="n">${all.filter(c => c.key === 'due').length}</div><div class="l">Due soon</div></div>
-      <div class="stat ${all.filter(c => c.key === 'expired' || c.key === 'none').length ? 'warn' : ''}"><div class="n">${all.filter(c => c.key === 'expired' || c.key === 'none').length}</div><div class="l">Out of date</div></div>
+      <div class="stat good"><div class="n">${week.length}</div><div class="l">Filed this week</div></div>
+      <div class="stat ${missing.length ? 'warn' : ''}"><div class="n">${missing.length}</div><div class="l">Not checked</div></div>
+      <div class="stat ${week.filter(c => c.fail_count).length ? 'warn' : ''}"><div class="n">${week.filter(c => c.fail_count).length}</div><div class="l">With defects</div></div>
     </div>
-    ${outWithLapsed.length ? `<div class="note warm">${I.alert({ s:15, c:'#a8341f' })}
-      <b>${esc(outWithLapsed.map(c => c.machine.plant_no).join(', '))}</b> is out on hire on a lapsed GA1.
-      It cannot be used as a lifting appliance until it has been examined again.</div>` : ''}
+    ${missing.length ? `<button class="banner" id="g2-missing">
+      <span class="ic">${I.alert({ s:22, c:'#a8341f' })}</span>
+      <span class="bt"><b>${plural(missing.length, 'machine')} not checked this week</b>
+        <span>${esc(missing.slice(0, 5).map(m => m.plant_no).join(', '))}${missing.length > 5 ? '…' : ''}</span></span>
+      ${I.chev({ s:18, c:'#a8341f' })}</button>` : ''}
+
     <div class="search">${I.search({ s:20, c:'#8b8373' })}
-      <input id="q" placeholder="Plant no, model, serial, cert no…" value="${esc(S.q)}" aria-label="Search plant for GA1"></div>
-    <div class="chips">${chips}</div>
-    <div class="slabel">${plural(list.length, 'machine')}</div>
-    ${rows || '<div class="empty">Nothing under that filter.</div>'}`);
+      <input id="q" placeholder="Search…" value="${esc(S.q)}" aria-label="Search weekly checks"></div>
+
+    <div class="weekbar"><span class="lbl">This week's submissions</span>
+      <span class="rng">${fmtDate(monday)} – ${fmtDate(addDays(monday, 6))}</span></div>
+    ${weekRows || '<div class="empty">Nothing filed this week yet.</div>'}
+
+    ${earlierRows ? `<div class="weekbar" style="margin-top:22px"><span class="lbl">Earlier</span></div>
+      ${earlierRows}` : ''}
+    <div style="height:56px"></div>`);
+
+  // The new-check action sits across the bottom of the list, over the tab bar.
+  const app = $('.app');
+  const bar = document.createElement('div');
+  bar.className = 'newbar';
+  bar.innerHTML = `<button class="btn" id="g2-new">${I.plus({ s:19, c:'#f5c542' })} New Check</button>`;
+  app.insertBefore(bar, app.querySelector('.tabs'));
 
   wireSearch();
-  $$('[data-gf]').forEach(b => b.onclick = () => { S.filters.ga1 = b.dataset.gf; render(); });
-  $$('[data-ga1]').forEach(b => b.onclick = () => openCert(Number(b.dataset.ga1)));
+  $('#g2-new').onclick = () => startGA2();
+  $$('[data-cpdf]').forEach(b => b.onclick = () => openCheckDoc(Number(b.dataset.cpdf)));
+  $$('[data-cm]').forEach(b => b.onclick = () => openMachine(Number(b.dataset.cm)));
+  if ($('#g2-missing')) $('#g2-missing').onclick = () => startGA2(missing[0].id);
 }
 
-// The machine's GA1, read back — and the report itself behind it.
+// ── The check itself ────────────────────────────────────────────────────────
+function startGA2(machineId){
+  S.scrollMem = {};
+  S.draft = {
+    kind:'ga2', dirty:false,
+    machine_id: machineId || '',
+    meter:'', remarks:'',
+    items: GA2_ITEMS.map(i => ({ item_id:i.id, checked:false, remark:null })),
+    nil_defects:false, photos:[], signature:null
+  };
+  ga2Form();
+}
+
+function ga2Form(){
+  const d = S.draft;
+  const m = d.machine_id ? machine(Number(d.machine_id)) : null;
+  const checked = d.items.filter(i => i.checked).length;
+  const fails = d.items.filter(i => !i.checked && (i.remark || '').trim());
+  const allOn = checked === GA2_ITEMS.length;
+
+  const rows = GA2_SECTIONS.map(sec => `
+    <div class="g2sec">${esc(sec.title)}</div>
+    ${sec.items.map(it => {
+      const row = d.items.find(x => x.item_id === it.id);
+      const bad = !row.checked && (row.remark || '').trim();
+      return `<div class="g2row ${bad ? 'bad' : ''}">
+        <div class="i">${esc(it.label)}</div>
+        <div class="c"><button type="button" class="g2box ${row.checked ? 'on' : ''}" data-g2="${it.id}"
+          aria-label="${esc(it.label)}">${I.tick({ s:17, c:'#fff', w:3 })}</button></div>
+        <div class="r"><input data-g2r="${it.id}" value="${esc(row.remark || '')}" placeholder="Remark"></div>
+      </div>`;
+    }).join('')}`).join('');
+
+  const body = `
+    <div class="g2meta">
+      <div><span>Operator</span> <b>${esc(S.user.name)}</b></div>
+      <div><span>Date</span> <b>${fmtDate(todayISO())}</b></div>
+      <div><span>Plant</span> <b>${esc(m ? m.plant_no : '—')}</b></div>
+      <div><span>Time</span> <b>${esc(nowClock())}</b></div>
+    </div>
+
+    <label class="f"><span>Select machine <span class="req">*</span></span>
+      <select id="g2-machine">
+        <option value="">Select machine…</option>
+        ${machinesView().map(x => `<option value="${x.id}" ${String(x.id) === String(d.machine_id) ? 'selected' : ''}>${esc(x.plant_no)} — ${esc(x.make_model)}</option>`).join('')}
+      </select></label>
+
+    <label class="f"><span>General remarks</span>
+      <input id="g2-remarks" value="${esc(d.remarks)}" placeholder="Enter general remarks…"></label>
+
+    <label class="f"><span>Hour meter reading <span class="req">*</span></span>
+      <input id="g2-meter" type="number" inputmode="numeric" value="${esc(d.meter)}" placeholder="Enter hour meter reading…"></label>
+    ${m ? `<div class="note" style="margin-top:-6px">Last recorded on ${esc(m.plant_no)}: <b>${num(m.hours)} hrs</b>.</div>` : ''}
+
+    <div class="g2tbl">
+      <div class="g2head"><div class="i">Item</div><div class="c">Checked</div><div class="r">Remark</div></div>
+      ${rows}
+    </div>
+
+    <button type="button" class="g2all ${allOn ? '' : 'off'}" id="g2-selectall">
+      ${I.tick({ s:19, c: allOn ? '#fff' : '#5c5648', w:3 })} ${allOn ? 'All items checked — tap to clear' : 'Select all'}</button>
+
+    <button type="button" class="g2nil ${d.nil_defects ? 'on' : ''}" id="g2-nil">
+      <span class="bx">${I.tick({ s:18, c:'#fff', w:3 })}</span>
+      <span><b>NIL defects</b><span>${fails.length
+        ? plural(fails.length, 'item') + ' marked with a remark — this cannot be a nil return'
+        : 'Nothing found wrong with the machine'}</span></span>
+    </button>
+
+    <div class="slabel sp">Photos (${d.photos.length}/${GA2_PHOTO_MAX})</div>
+    ${d.photos.length ? `<div class="thumbs">${d.photos.map((p, i) => `<div class="thumb">
+      <img src="${p.src}" alt="${esc(p.tag)}">
+      <button type="button" class="rm" data-g2prm="${i}" aria-label="Remove">${I.x({ s:14, c:'#fff' })}</button>
+      <span class="cap">${esc(p.tag)}</span></div>`).join('')}</div>` : ''}
+    ${d.photos.length < GA2_PHOTO_MAX ? `<div class="photos">
+      <button type="button" class="ib" id="g2-photo">${I.cam({ s:19, c:'#f5c542' })} Add photo</button>
+      <button type="button" class="ib" id="g2-photoreal">${I.gal({ s:19, c:'#f5c542' })} From the phone</button>
+    </div>
+    <input type="file" id="g2-file" accept="image/*" capture="environment" hidden>` : ''}
+
+    <div class="slabel sp">Signature</div>
+    ${sigBlock('g2-sig', 'Operator signs here', d.signature)}`;
+
+  S.sheet = `<div class="sheet" role="dialog" aria-label="Plant weekly check">
+    <header><button class="x" id="sh-x" aria-label="Close">${I.x({ s:20 })}</button>
+      <h2>Plant Weekly Check</h2><span style="width:40px;flex:0 0 40px"></span></header>
+    <div class="sbody">${body}</div>
+    <div class="sfoot">
+      <button class="btn ghost" id="sh-cancel">Cancel</button>
+      <button class="btn green" id="g2-submit">Submit</button>
+    </div></div>`;
+
+  function harvest(){
+    const g = id => { const el = $(id); return el ? el.value : undefined; };
+    const mv = g('#g2-machine'); if (mv !== undefined) d.machine_id = mv;
+    const rv = g('#g2-remarks'); if (rv !== undefined) d.remarks = rv;
+    const tv = g('#g2-meter');   if (tv !== undefined) d.meter = tv;
+    $$('[data-g2r]').forEach(el => {
+      const row = d.items.find(x => x.item_id === Number(el.dataset.g2r));
+      if (row) row.remark = el.value.trim() || null;
+    });
+  }
+  d.rerender = () => { harvest(); ga2Form(); };
+  S.sheetKey = 'ga2';
+  S.sheetWire = () => {
+    $('#g2-machine').onchange = () => {
+      harvest();
+      const nm = d.machine_id ? machine(Number(d.machine_id)) : null;
+      if (nm && !d.meter) d.meter = String(nm.hours);
+      ga2Form();
+    };
+    $$('[data-g2]').forEach(b => b.onclick = () => {
+      harvest();
+      const row = d.items.find(x => x.item_id === Number(b.dataset.g2));
+      row.checked = !row.checked;
+      if (row.checked) row.remark = null;
+      d.nil_defects = d.items.every(x => x.checked);
+      d.dirty = true;
+      ga2Form();
+    });
+    $$('[data-g2r]').forEach(el => el.oninput = () => {
+      const row = d.items.find(x => x.item_id === Number(el.dataset.g2r));
+      if (row) { row.remark = el.value.trim() || null; d.dirty = true; }
+    });
+    $('#g2-selectall').onclick = () => {
+      harvest();
+      const on = d.items.filter(x => x.checked).length === GA2_ITEMS.length;
+      d.items.forEach(x => { x.checked = !on; if (!on) x.remark = null; });
+      d.nil_defects = !on;
+      d.dirty = true;
+      ga2Form();
+    };
+    $('#g2-nil').onclick = () => {
+      harvest();
+      const anyFail = d.items.some(x => !x.checked && (x.remark || '').trim());
+      if (anyFail) return toast('Something is marked with a remark — that is not a nil return', 'bad');
+      d.nil_defects = !d.nil_defects;
+      if (d.nil_defects) d.items.forEach(x => { x.checked = true; x.remark = null; });
+      d.dirty = true;
+      ga2Form();
+    };
+    if ($('#g2-photo')) $('#g2-photo').onclick = () => {
+      harvest();
+      d.photos.push({ tag:'Photo ' + (d.photos.length + 1),
+        src: fakePhoto('Weekly check', m ? m.plant_no : 'Plant', todayISO()) });
+      d.dirty = true; ga2Form();
+    };
+    $$('[data-g2prm]').forEach(b => b.onclick = () => {
+      harvest(); d.photos.splice(Number(b.dataset.g2prm), 1); d.dirty = true; ga2Form();
+    });
+    const file = $('#g2-file');
+    if ($('#g2-photoreal')) $('#g2-photoreal').onclick = () => file.click();
+    if (file) file.onchange = async () => {
+      const f = file.files && file.files[0];
+      if (!f) return;
+      try {
+        harvest();
+        d.photos.push({ tag:'Photo ' + (d.photos.length + 1), src: await shrinkImage(f, 1100, .72) });
+        d.dirty = true; ga2Form();
+      } catch (e) { toast(e.message, 'bad'); }
+    };
+    const pad = $('#g2-sig');
+    if (pad) {
+      const api = initSigPad(pad);
+      const btn = $('[data-sigdone="g2-sig"]');
+      if (btn) btn.onclick = () => {
+        if (api.isEmpty()) return toast('Nothing signed yet', 'bad');
+        harvest(); d.signature = api.data(); ga2Form();
+      };
+    }
+    const clr = $('[data-sigclear="g2-sig"]');
+    if (clr) clr.onclick = () => { harvest(); d.signature = null; ga2Form(); };
+
+    $('#g2-submit').onclick = () => {
+      harvest();
+      try {
+        const r = submitGA2(d);
+        S.draft = null; S.sheet = null; S.sheetWire = null; S.sheetKey = null;
+        render();
+        toast(`${r.ref} filed on ${r.plant_no}`, 'good');
+        if (r.card) setTimeout(() => toast(`${r.card.ref} raised on what was found`, 'bad'), 1700);
+        openCheckDoc(r.id);
+      } catch (e) { toast(e.message, 'bad'); }
+    };
+  };
+  render();
+}
+
 function openCert(machineId){
   const m = machine(machineId);
   const cv = certView(m);
@@ -3851,6 +4293,108 @@ function openCert(machineId){
       if ($('#gc-doc')) $('#gc-doc').onclick = () => openCertDoc(m.id, c.id);
       $$('[data-hist]').forEach(b => b.onclick = () => openCertDoc(m.id, Number(b.dataset.hist)));
     });
+}
+
+// The weekly check as it would be filed.
+function ga2PageHtml(c){
+  const m = machine(c.machine_id);
+  const byId2 = id => c.items.find(i => i.item_id === id) || {};
+  return `<div class="pdf-page">
+    <div class="pdf-head">
+      <svg class="lg" viewBox="0 0 212 132" role="img" aria-label="McGuirk Hire"><use href="#mcguirk-mark"/></svg>
+      <div class="hx"><b>${esc(YARD.name)}</b>
+        <span>${esc(YARD.trading)}</span>
+        <span>${YARD.addr.map(esc).join('<br>')}</span>
+        <span>T ${esc(YARD.phone)} · ${esc(YARD.email)}</span></div>
+    </div>
+
+    <p class="pdf-title">GA2 — PLANT WEEKLY CHECK</p>
+    <p class="pdf-ref">${esc(c.ref)} &nbsp;·&nbsp; ${fmtDate(c.date)} at ${esc(c.time)}
+      &nbsp;·&nbsp; week of ${fmtDate(c.week_start)}</p>
+
+    <table class="pdf-kv">
+      <tr class="sec"><th colspan="2">The machine</th></tr>
+      <tr><th>Plant number</th><td class="big">${esc(c.plant_no)}</td></tr>
+      <tr><th>Make &amp; model</th><td>${esc(c.make_model)}</td></tr>
+      <tr><th>Serial number</th><td>${esc(m ? m.serial : '—')}</td></tr>
+      <tr><th>Hour meter</th><td class="big">${num(c.meter)} hrs</td></tr>
+      <tr><th>Checked by</th><td>${esc(c.operator_name)}</td></tr>
+      ${c.remarks ? `<tr><th>General remarks</th><td>${esc(c.remarks)}</td></tr>` : ''}
+    </table>
+
+    <p class="pdf-sec">Walk-round — ${c.checked_count} of ${GA2_ITEMS.length} checked${
+      c.fail_count ? `, ${plural(c.fail_count, 'defect')}` : ', NIL defects'}</p>
+    <table class="pdf-tb">
+      <thead><tr><th>Item</th><th style="width:52px">Checked</th><th style="width:34%">Remark</th></tr></thead>
+      <tbody>
+        ${GA2_SECTIONS.map(sec => `
+          <tr><td colspan="3" style="background:#eee;font-weight:700;font-size:8.4px;
+            letter-spacing:.08em;text-transform:uppercase">${esc(sec.title)}</td></tr>
+          ${sec.items.map(it => { const r = byId2(it.id);
+            return `<tr><td>${esc(it.label)}</td>
+              <td class="c ${r.checked ? 'pass' : 'fail'}">${r.checked ? '✓' : 'DEFECT'}</td>
+              <td>${esc(r.remark || '')}</td></tr>`; }).join('')}`).join('')}
+      </tbody>
+    </table>
+
+    <table class="pdf-kv">
+      <tr><th>NIL defects declared</th><td class="big" style="color:${c.nil_defects ? '#0a7a50' : '#b32218'}">${c.nil_defects ? 'YES' : 'NO'}</td></tr>
+    </table>
+
+    ${c.photos.length ? `<p class="pdf-sec">Photographs</p>
+      <div class="pdf-shots">${c.photos.map(p => `<figure><img src="${p.src}" alt="${esc(p.tag)}">
+        <figcaption>${esc(p.tag)}</figcaption></figure>`).join('')}</div>` : ''}
+
+    <div class="pdf-sign">
+      <div class="sc"><div class="sl">Operator</div>
+        <div class="sbox">${c.signature ? `<img src="${c.signature}" alt="Signature">` : '<i>unsigned</i>'}</div>
+        <div class="sv">${esc(c.operator_name)}<br>${fmtDate(c.date)} at ${esc(c.time)}</div></div>
+      <div class="sc"><div class="sl">Filed</div>
+        <div class="sbox"><i>${esc(c.ref)}</i></div>
+        <div class="sv">Week of ${fmtDate(c.week_start)}<br>${esc(YARD.name)}</div></div>
+    </div>
+
+    <p class="pdf-terms">This weekly check records the condition of the machine as found on the date shown.
+      A defect recorded here is raised as a job card against the machine and the machine must not be used
+      for work affected by that defect until it has been made good. This record is to be kept available for
+      inspection and a copy supplied with the machine while it is on hire.</p>
+
+    <div class="pdf-foot">
+      <div class="ad"><b>${esc(YARD.name)}</b> · ${esc(YARD.addr.join(', '))}<br>
+        ${esc(YARD.phone)} · ${esc(YARD.email)}</div>
+      <div class="pg">${esc(c.ref)} · ${esc(c.plant_no)}</div>
+    </div>
+  </div>`;
+}
+
+function openCheckDoc(id){
+  const c = checkView(check(id));
+  S.pdf = `<div class="pdfview" role="dialog" aria-label="${esc(c.ref)}">
+    <div class="pdf-toolbar">
+      <button class="tb" id="pv-x" aria-label="Close">${I.x({ s:18, c:'#e8e8e8' })}</button>
+      <span class="fn">${esc(c.filename)}</span>
+      <button class="tb" id="pv-print" aria-label="Print">${I.print({ s:17, c:'#e8e8e8' })}</button>
+      <button class="tb" id="pv-mail" aria-label="Email">${I.mail({ s:17, c:'#e8e8e8' })}</button>
+      <button class="tb" id="pv-down" aria-label="Download">${I.down({ s:17, c:'#e8e8e8' })}</button>
+    </div>
+    <div class="pdf-scroll" id="pv-scroll">
+      ${ga2PageHtml(c)}
+      <p class="pdf-note">The weekly check as it would be filed. Print works —
+        emailing and downloading are the live system's job.</p>
+    </div>
+  </div>`;
+  S.pdfWire = () => {
+    $('#pv-x').onclick = () => { S.pdf = null; S.pdfWire = null; render(); };
+    $('#pv-print').onclick = () => {
+      const zone = $('#printzone');
+      zone.innerHTML = ga2PageHtml(c);
+      window.print();
+      setTimeout(() => { zone.innerHTML = ''; }, 500);
+    };
+    $('#pv-mail').onclick = () => toast(`Would email ${c.ref} to the office`);
+    $('#pv-down').onclick = () => toast(`Would save ${c.filename} to the phone`);
+  };
+  render();
 }
 
 // ── The certificate itself ──────────────────────────────────────────────────
@@ -3977,6 +4521,153 @@ function openCertDoc(machineId, certId){
     $('#pv-down').onclick = () => toast(`Would save ${file} to the phone`);
   };
   render();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Fleet
+// Every machine, and behind each one its paperwork: the GA1 thorough
+// examinations and the GA2 weekly checks.
+// ═══════════════════════════════════════════════════════════════════════════
+function viewFleet(){
+  const f = S.filters.fleet;
+  const q = S.q.toLowerCase();
+  let list = machinesView().map(m => {
+    const raw = machine(m.id);
+    return Object.assign({}, m, { ga1: certView(raw), ga2: ga2Standing(raw) });
+  });
+
+  if (f === 'ga1') list = list.filter(m => m.ga1.key === 'expired' || m.ga1.key === 'none' || m.ga1.key === 'due');
+  else if (f === 'ga2') list = list.filter(m => !m.ga2.done);
+  else if (f !== 'all') list = list.filter(m => m.status === f);
+  if (q) list = list.filter(m => (m.plant_no + ' ' + m.make_model + ' ' + m.serial + ' ' +
+    (m.customer_name || '') + ' ' + m.site_name).toLowerCase().includes(q));
+  list = list.sort((a, b) => a.plant_no < b.plant_no ? -1 : 1);
+
+  const all = machinesView().map(m => {
+    const raw = machine(m.id);
+    return { ga1: certView(raw), ga2: ga2Standing(raw) };
+  });
+  const chips = [['all','All plant'],['ga1','GA1 attention'],['ga2','No weekly check'],
+    ['on_hire','On hire'],['yard','In the yard'],['service','Service'],['off_road','Off road']]
+    .map(([k, l]) => `<button class="chip ${f===k?'on':''}" data-ff="${k}">${l}</button>`).join('');
+
+  const rows = list.map(m => {
+    const bad = m.ga1.key === 'expired' || m.ga1.key === 'none';
+    return `<button class="lcard ${bad ? 'flag' : ''}" data-fm="${m.id}">
+      <div class="top">
+        <span class="ic-sm">${I.digger({ s:21, c:'#8a6410' })}</span>
+        <div style="flex:1;min-width:0">
+          <div class="t">${esc(m.plant_no)}</div>
+          <div class="s">${esc(m.make_model)}<br>${m.customer_name
+            ? esc(m.customer_name) + ' · ' + esc(m.site_name) : esc(m.site_name)}</div>
+        </div>
+        <div class="r"><div style="font-size:17px;font-weight:800">${num(m.hours)}</div>
+          <div style="font-size:11px;color:var(--ink-3);font-weight:700">HRS</div></div>
+      </div>
+      <div class="tags">
+        <span class="pill ${m.status_cls}">${esc(m.status_label)}</span>
+        <span class="pill ${m.ga1.state_cls}">GA1 · ${esc(m.ga1.key === 'not_required' ? 'n/a' : m.ga1.state_label)}</span>
+        <span class="pill ${m.ga2.cls}">GA2 · ${m.ga2.done ? 'this week' : 'due'}</span>
+        ${m.open_cards ? `<span class="pill red">${plural(m.open_cards, 'open card')}</span>` : ''}
+      </div>
+    </button>`;
+  }).join('');
+
+  paint(`
+    <div class="stats">
+      <div class="stat"><div class="n">${db.machines.length}</div><div class="l">Machines</div></div>
+      <div class="stat ${all.filter(x => x.ga1.key === 'expired' || x.ga1.key === 'none').length ? 'warn' : ''}"><div class="n">${all.filter(x => x.ga1.key === 'expired' || x.ga1.key === 'none').length}</div><div class="l">GA1 out of date</div></div>
+      <div class="stat ${all.filter(x => !x.ga2.done).length ? 'warn' : ''}"><div class="n">${all.filter(x => !x.ga2.done).length}</div><div class="l">GA2 due</div></div>
+    </div>
+    <div class="search">${I.search({ s:20, c:'#8b8373' })}
+      <input id="q" placeholder="Plant no, model, serial, site…" value="${esc(S.q)}" aria-label="Search the fleet"></div>
+    <div class="chips">${chips}</div>
+    <div class="slabel">${plural(list.length, 'machine')}</div>
+    ${rows || '<div class="empty">Nothing under that filter.</div>'}`);
+
+  wireSearch();
+  $$('[data-ff]').forEach(b => b.onclick = () => { S.filters.fleet = b.dataset.ff; render(); });
+  $$('[data-fm]').forEach(b => b.onclick = () => openMachine(Number(b.dataset.fm)));
+}
+
+// One machine, and everything filed against it.
+function openMachine(id){
+  const raw = machine(id);
+  const m = machineView(raw);
+  const cv = certView(raw);
+  const g2 = ga2Standing(raw);
+  const checks = checksFor(id);
+  const cards = db.jobcards.filter(j => j.machine_id === id).map(jobcardView);
+  const h = m.hire_id ? hireView(hire(m.hire_id)) : null;
+
+  openSheet(m.plant_no, `
+    <div class="tags" style="margin:0 0 16px">
+      <span class="pill ${m.status_cls}">${esc(m.status_label)}</span>
+      <span class="pill ${cv.state_cls}">GA1 · ${esc(cv.key === 'not_required' ? 'not required' : cv.state_label)}</span>
+      <span class="pill ${g2.cls}">GA2 · ${g2.done ? 'this week' : 'due'}</span>
+    </div>
+
+    <div class="readout">
+      <div class="kv"><span class="k">Make &amp; model</span><span class="v">${esc(m.make_model)}</span></div>
+      <div class="kv"><span class="k">Serial</span><span class="v">${esc(m.serial)}</span></div>
+      <div class="kv"><span class="k">Year</span><span class="v">${m.year}</span></div>
+      <div class="kv"><span class="k">Hour meter</span><span class="v big">${num(m.hours)}</span></div>
+      <div class="kv"><span class="k">Fuel</span><span class="v">${esc(m.fuel_label)}</span></div>
+      <div class="kv"><span class="k">Where</span><span class="v">${esc(h ? h.customer_name + ' · ' + h.site_name : m.site_name)}</span></div>
+      ${h ? `<div class="kv"><span class="k">On hire</span><span class="v">${esc(h.ref)} · due back ${fmtDate(h.due_date)}</span></div>` : ''}
+    </div>
+
+    <div class="slabel sp">GA1 — thorough examination</div>
+    ${!cv.required
+      ? `<div class="note">A ${esc(m.type)} is not a lifting appliance, so the GA1 regime does not
+          apply to it. Its safety paperwork is the GA2 weekly check below.</div>`
+      : cv.cert
+        ? `<button class="lcard ${cv.key === 'expired' ? 'flag' : ''}" data-cert="${cv.cert.id}">
+             <div class="top"><span class="ic-sm">${I.cert({ s:20, c:'#8a6410' })}</span>
+               <div style="flex:1;min-width:0"><div class="t">${esc(cv.cert.cert_no)}</div>
+                 <div class="s">Examined ${fmtDate(cv.cert.examined_on)} · next due ${fmtDate(cv.cert.next_due)}</div></div>
+               ${I.chev({ s:18, c:'#8b8373' })}</div>
+             <div class="tags"><span class="pill ${cv.state_cls}">${esc(cv.state_label)}</span>
+               <span class="pill grey">${esc(cv.standing)}</span>
+               <span class="pill grey">SWL ${esc(cv.cert.swl)}</span></div></button>
+           ${cv.history_count > 1 ? cv.history.slice(1).map(x => `<button class="lcard" data-cert="${x.id}">
+             <div class="top"><span class="ic-sm">${I.cert({ s:19, c:'#8a6410' })}</span>
+               <div style="flex:1;min-width:0"><div class="t">${esc(x.cert_no)}</div>
+                 <div class="s">Examined ${fmtDate(x.examined_on)} · ran to ${fmtDate(x.next_due)}</div></div>
+               ${I.chev({ s:18, c:'#8b8373' })}</div>
+             <div class="tags"><span class="pill grey">Superseded</span></div></button>`).join('') : ''}`
+        : `<div class="note warm">${I.alert({ s:15, c:'#a8341f' })} No GA1 on file, and this is a
+            lifting appliance. It cannot be hired out for lifting until it has been examined.</div>`}
+
+    <div class="slabel sp">GA2 — weekly checks</div>
+    ${g2.done ? '' : `<div class="note warm">Not checked this week.${g2.last
+      ? ` Last checked ${fmtDate(g2.last.date)}, ${plural(g2.days_since, 'day')} ago.` : ' Never checked.'}</div>`}
+    <button class="btn ${g2.done ? 'ghost' : ''}" id="fm-check" style="margin-bottom:14px">
+      ${I.plus({ s:18, c: g2.done ? '#191510' : '#f5c542' })} ${g2.done ? 'Check it again' : 'Do this week\u2019s check'}</button>
+    ${checks.length ? checks.slice(0, 6).map(c => `<button class="lcard ${c.fail_count ? 'flag' : ''}" data-chk="${c.id}">
+        <div class="top"><span class="ic-sm">${I.tick({ s:19, c:'#8a6410' })}</span>
+          <div style="flex:1;min-width:0"><div class="t">${esc(c.ref)}</div>
+            <div class="s">${fmtDate(c.date)} at ${esc(c.time)} · ${esc(first(c.operator_name))}</div></div>
+          ${I.chev({ s:18, c:'#8b8373' })}</div>
+        <div class="tags">
+          ${c.nil_defects ? '<span class="pill green">NIL defects</span>'
+            : `<span class="pill red">${plural(c.fail_count, 'defect')}</span>`}
+          <span class="pill grey">${num(c.meter)} hrs</span></div></button>`).join('')
+      : '<div class="empty">No weekly checks filed on this machine.</div>'}
+    ${checks.length > 6 ? `<div class="slabel">Showing the last 6 of ${checks.length}</div>` : ''}
+
+    ${cards.length ? `<div class="slabel sp">Job cards</div>
+      ${cards.map(j => `<button class="lcard" data-jc="${j.id}">
+        <div class="top"><div style="flex:1;min-width:0"><div class="t">${esc(j.ref)} · ${esc(j.type_label)}</div>
+          <div class="s">${esc(j.fault)}</div></div></div>
+        <div class="tags"><span class="pill ${j.status_cls}">${esc(j.status_label)}</span></div></button>`).join('')}` : ''}`,
+    `<button class="btn ghost" id="sh-cancel">Close</button>`,
+    () => {
+      $$('[data-cert]').forEach(b => b.onclick = () => openCertDoc(id, Number(b.dataset.cert)));
+      $$('[data-chk]').forEach(b => b.onclick = () => openCheckDoc(Number(b.dataset.chk)));
+      $$('[data-jc]').forEach(b => b.onclick = () => openJobCard(Number(b.dataset.jc)));
+      $('#fm-check').onclick = () => startGA2(id);
+    });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

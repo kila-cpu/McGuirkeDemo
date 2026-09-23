@@ -133,35 +133,65 @@ States: `Unassigned · Assigned · Draft · Awaiting PO · Complete`. Every step
 saves as it is left, so a card put down mid-job is a Draft with the work on it.
 Unassigned cards put a banner on a full access home screen.
 
-## 4 · Plant Machinery GA1
+## 4 · GA2 — the plant weekly check
 
-Search the fleet, pick a machine, read its **report of thorough examination**.
+Built to the supplied wireframes. **Submissions list** with a search, *this
+week's submissions* under the week's date range, each card showing the plant
+number, the day and time, the operator, and a **View PDF**; **+ New Check**
+across the bottom.
 
-The GA1 applies to **lifting appliances**, and that distinction is built in: an
-excavator or a telehandler needs one, a dumper, roller, compressor or genset does
-not. So *"no GA1 on file"* and *"not a lifting appliance"* are different answers —
-one wants chasing, the other is simply correct — and the screen says which.
+The check itself follows the same form as the wireframe, adapted from a truck to
+a machine:
 
-- **Search** on plant number, model, serial or certificate number
-- **Filters** — needs attention / in date / due soon / out of date / no GA1 needed
-- Every machine shows its certificate number, next due date and standing:
-  *245 days left*, *due in 25 days*, *lapsed 30 days ago*
-- Anything **out on hire on a lapsed GA1** is called out at the top of the screen
-  and on the hire itself, because that is the one that matters
-- Tapping a machine gives the report in force — examined on, next due, interval,
-  **safe working load**, whether it is safe to operate, any defects noted, and the
-  competent person who signed it — plus earlier reports on the same machine
-- **View the certificate** opens it laid out as **Form GA1**, headed by the
-  examining company with the McGuirk mark as the owner's file copy. Print works.
+| Wireframe | Here |
+| --- | --- |
+| Employee · Reg · Date · Time | Operator · Plant · Date · Time |
+| Select Truck | Select machine |
+| General remarks | General remarks |
+| Odometer reading | **Hour meter reading**, with the last recorded hours shown |
+| Item / Checked / Remark table, banded by section | Same, **27 items over four sections** — In Cab, Engine & Fluids, Walk-round, Function test |
+| NIL Defects · Select All | Same |
+| Photos (0/6) · Signature · Submit | Same |
 
-The hire detail carries a GA1 line for its machine, so a lapsed cert shows up
-where somebody is about to send the machine out again.
+- **Select all** checks the lot; knocking one back out and putting a remark
+  against it makes it a defect
+- **NIL defects is refused** while anything carries a remark — that is not a nil
+  return, and the app says so rather than letting it through
+- Submitting files the check, moves the machine's hour meter on, and **raises a
+  job card on any defect found**, quoting the check and the remark. The card
+  links back to the check and the check is reachable from the card
+- **View PDF** opens the filed GA2 as paper — the machine, the meter, the whole
+  walk-round with defects in red, the NIL declaration, photographs and the
+  operator's signature. Print works
 
-The seed covers every case: three in date, **MH-202** falling due inside the
-month, **MH-530 lapsed and out on hire with a customer**, and six machines
-correctly outside the regime.
+### Not checked this week
 
-## 5 · The printable docket
+A weekly check is only weekly if somebody notices when it is missed, so the
+screen counts **machines not checked this week**, banners them, and offers the
+check straight off the banner.
+
+One thing I did not copy from the wireframes: their list has rows reading **"No
+Vehicle"**, which means their app accepts a submission with no vehicle attached.
+Here the machine is required, so a check is always against a machine.
+
+## 5 · Fleet
+
+Every machine, searchable on plant number, model, serial or site, filtered by
+**GA1 attention**, **no weekly check**, or where the machine is. Each row carries
+its status, its GA1 standing and whether the GA2 is done this week.
+
+Opening a machine gives its details — model, serial, year, hour meter, fuel,
+where it is, and the hire it is on — and then its paperwork:
+
+- **GA1 — thorough examination.** The report in force with its certificate
+  number, dates, standing and safe working load, superseded reports underneath,
+  each opening the printed Form GA1. A machine outside the lifting-appliance
+  rules says so instead of showing a gap.
+- **GA2 — weekly checks.** The checks filed against that machine, most recent
+  first, each opening its report, with a button to do this week's.
+- **Job cards** raised on the machine.
+
+## 6 · The printable docket
 
 Two pages, in the reader the paper would come out of:
 
@@ -185,7 +215,9 @@ belongs to and from any job card raised off one.
 Clock in / out sits at the top of Home, and **Profile** carries the access level
 and a **Reset the demo data** button.
 
-Five screens: Home, On Hire / Off Hire, Job Cards, Dockets, Plant Machinery GA1.
+Six screens: Home, On Hire / Off Hire, Job Cards, GA2 Plant Weekly Check, Fleet
+and Dockets. The tab bar carries the five daily ones; Dockets is a Home tile and
+is also reachable from any hire or card.
 
 ## Known limits of a wireframe
 
@@ -205,9 +237,9 @@ Five screens: Home, On Hire / Off Hire, Job Cards, Dockets, Plant Machinery GA1.
 
 ## Not in this set, by decision
 
-Hired-in plant and rates/spend are out of scope. The GA1 screen reads
-certificates and prints them; **uploading or recording a new examination is not
-built**, since the reports come from the examining company.
+Hired-in plant and rates/spend are out of scope. GA1 certificates can be read and
+printed but **not added** — the reports come from the examining company. GA2
+checks can be filed from the app.
 
 ## What would sharpen it
 
