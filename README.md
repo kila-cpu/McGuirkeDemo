@@ -108,7 +108,9 @@ access level and a **Reset the demo data** button.
 There is no clock in / out and no alert banner on Home: the counts and the tile
 badges already say what wants doing.
 
-Four screens: Home, Job Cards, Plant Machinery GA1, Fleet.
+Four screens: Home, Job Cards, Plant Machinery GA1, Fleet. The tab bar carries
+Home, Cards, Fleet and Profile — GA1 is reached from its Home tile and from any
+machine in the fleet.
 
 ## Known limits of a wireframe
 

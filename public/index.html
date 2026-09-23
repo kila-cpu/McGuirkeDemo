@@ -1335,10 +1335,11 @@ function paintPins(){
 const TITLES = {
   jobcards:'Job Cards', ga1:'Plant Machinery GA1', fleet:'Fleet', profile:'Profile'
 };
+// GA1 is reached from its Home tile and from any machine in the fleet, so it
+// does not need a seat in the bar as well.
 const TABS = [
   { id:'home',     label:'Home',    ico:'home'   },
   { id:'jobcards', label:'Cards',   ico:'wrench' },
-  { id:'ga1',      label:'GA1',     ico:'cert'   },
   { id:'fleet',    label:'Fleet',   ico:'digger' },
   { id:'profile',  label:'Profile', ico:'user'   }
 ];
