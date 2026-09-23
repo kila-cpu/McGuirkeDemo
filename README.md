@@ -4,9 +4,10 @@ Interactive wireframe of the **McGuirk Hire operator phone app**, prepared by
 DMC Consultancy Ltd. One self-contained page, no build, no dependencies, no
 backend — everything runs in the browser tab.
 
-What it covers: **plant machinery job cards** worked through on the phone, the
-**GA1 thorough examination** certificates behind every lifting appliance, and a
-**fleet** view that puts both against the machine they belong to.
+What it covers: **job cards** worked through on the phone — on plant or on a
+vehicle, each with its own paperwork — the **GA1 thorough examination**
+certificates behind every lifting appliance, and a **fleet** view that puts both
+against the machine they belong to.
 
 There is no office backend in this set — the phone app only, as asked.
 
@@ -40,24 +41,71 @@ else, or close one with a PO. To put one back, add a row to the `employees` list
 at the top of the script with `access:'general'`; the screens and the rules
 behind them pick it up with no other change.
 
-## 1 · Job cards — four steps
+## 1 · Job cards — plant or vehicle
+
+Raising a card starts with the one question that changes everything after it:
+**is the job on plant or on a vehicle?** The two carry different paperwork, so
+the form, the job types and the checklist all follow from that answer. The list
+filters on it too — Everything / Plant / Vehicles.
+
+### The card itself — four steps
 
 `Start → Work → Parts → End`, on the MPF pattern.
 
-- **Start** is a read-only brief: machine, meter, where, who to ask for, the
-  fault as reported and parts already allocated. The fitter never re-enters what
-  the yard already set.
-- **Work** — what was carried out, labour hours, and a 10-row service checklist,
-  each row pass / defect / n-a with a note on anything failed.
+- **Start** is a read-only brief: the machine or the reg, the meter or the
+  odometer, where it is, the job as raised, and parts already allocated. On a
+  vehicle it also carries the **last 12 week check** and the **CVRT date**, and
+  says so in red if either has lapsed. The fitter never re-enters what the yard
+  already set.
+- **Work** — what was carried out, labour hours, and then **the checklist that
+  belongs to this job** (below).
 - **Parts** — allocated parts can be struck off if they were not used; anything
   off the shelf gets added.
 - **End** — before and after photos, signed on site, then away to the office.
-  A card sent is **Awaiting PO** and the machine goes back on the list; a full
-  access account adds the PO to close it.
+  A card sent is **Awaiting PO**; a full access account adds the PO to close it.
+  Closing a vehicle card puts it back on the road, and closing a **12 week
+  check** files that date as the vehicle's new one.
 
 States: `Unassigned · Assigned · Draft · Awaiting PO · Complete`. Every step
-saves as it is left, so a card put down mid-job is a Draft with the work on it.
-Unassigned cards put a banner on Home.
+saves as it is left.
+
+### Plant job types
+
+Service, Repair, Breakdown, Inspection, Damage repair — with the 10-row service
+checklist on the Work step.
+
+### Vehicle job types
+
+**12 week check · Tyres** · Service · Repair · Breakdown · CVRT preparation ·
+Driver defect.
+
+Two of them carry their own paperwork:
+
+**12 week check** — the preventative maintenance inspection, **35 points over
+seven sections**, banded and walked in the order it is actually carried out:
+driver's controls and cab, braking system, steering and suspension, wheels and
+tyres, lighting and electrical, body/fuel/exhaust, and a road test. Each point is
+pass / defect / n-a, and a defect needs a note.
+
+**Tyres** — a row per wheel, off the vehicle's own axle layout: a 6x2 tractor
+unit gives eight wheels, an 8x4 tipper twelve, a van four, a tri-axle trailer
+six. Each row takes a **tread depth and a pressure**, and reads back a verdict
+against the **legal minimum for that class of vehicle** — 1.0 mm over 3.5 t,
+1.6 mm below it. Anything under is red and named as below the limit; anything
+within 1.5 mm of it is amber and marked Monitor. Each wheel also carries an
+action: no action, replaced, repaired, swapped, or pressure adjusted. The step
+will not pass until every wheel has been read.
+
+Both print through onto the card, so a finished 12 week check reads back in its
+sections and a finished tyre job reads back wheel by wheel.
+
+### The vehicles
+
+Six on the books — a Scania 6x2 tractor unit, a Volvo 8x4 tipper, a DAF 7.5t
+beavertail plant carrier, an Iveco 7.2t tipper, a Transit van and a tri-axle low
+loader trailer. Each carries its odometer, its last 12 week check, its CVRT date
+and its axle layout. The seed has one **12 week check overdue**, one **CVRT
+lapsed**, and a tyre job with a wheel **below the legal limit**.
 
 ## 2 · Plant Machinery GA1
 
@@ -141,8 +189,9 @@ from the examining company.
 
 ## What would sharpen it
 
-- **Their service checklist.** The 10 rows on a job card are a sensible service
-  list; if the workshop already has its own, that goes in instead.
+- **Their service checklist and their 12 week inspection sheet.** The 10 service
+  rows and the 35 inspection points are sensible lists; if the workshop already
+  has its own sheets, those go in instead.
 - **A real GA1 from their examining company.** The printed form follows the
   statutory headings, but matching their inspector's actual layout would make it
   unarguable.

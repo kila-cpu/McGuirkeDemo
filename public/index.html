@@ -370,6 +370,41 @@ textarea{min-height:96px;resize:vertical}
 .dmgitem .rm{width:30px;height:30px;flex:0 0 30px;border-radius:50%;background:var(--grey-soft);
   border:0;display:grid;place-items:center;padding:0}
 
+/* A banded section heading inside a checklist — the twelve week inspection is
+   walked in groups, so it reads in groups. */
+.clsec{background:var(--grey-soft);font-size:11.5px;font-weight:750;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink-2);padding:9px 12px;border-bottom:1px solid var(--line)}
+
+/* ── Tyres ───────────────────────────────────────────────────────────────────
+   A row per wheel. Tread against the legal minimum for that class of vehicle
+   is the whole point, so it is read back as a verdict, not left as a number. */
+.tyhead{display:flex;background:var(--char);color:var(--gold);font-size:11px;font-weight:750;
+  letter-spacing:.06em;text-transform:uppercase;border-radius:11px 11px 0 0;padding:11px 12px;gap:8px}
+.tyhead .p{flex:1}
+.tyhead .t{flex:0 0 62px;text-align:center}
+.tyhead .r{flex:0 0 62px;text-align:center}
+.tylist{border:1px solid var(--line);border-top:0;border-radius:0 0 11px 11px;overflow:hidden;
+  background:#fff;margin-bottom:12px}
+.tyrow{border-bottom:1px solid var(--line);padding:10px 12px}
+.tyrow:last-child{border-bottom:0}
+.tyrow.bad{background:#fdf3f1}
+.tyrow.watch{background:#fdf8ef}
+.tytop{display:flex;align-items:center;gap:8px}
+.tytop .p{flex:1;font-size:14.5px;font-weight:650;line-height:1.25}
+.tytop .t,.tytop .r{flex:0 0 62px}
+.tytop input{padding:9px 6px;font-size:14px;border-radius:8px;background:#f6f3ec;
+  border-color:transparent;text-align:center;font-variant-numeric:tabular-nums}
+.tytop input:focus{background:#fff;border-color:var(--brand)}
+.tybot{display:flex;align-items:center;gap:8px;margin-top:8px}
+.tybot select{padding:9px 10px;font-size:13.5px;border-radius:8px;background:#f6f3ec;
+  border-color:transparent;flex:1}
+.tyverdict{flex:0 0 auto;font-size:11.5px;font-weight:750;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.tyverdict.ok{background:var(--green-soft);color:var(--green-2)}
+.tyverdict.watch{background:var(--amber-soft);color:var(--amber-2)}
+.tyverdict.bad{background:var(--red-soft);color:var(--red)}
+.tyverdict.none{background:var(--grey-soft);color:var(--ink-3)}
+.tylegend{font-size:12.5px;color:var(--ink-3);margin:-4px 0 16px;line-height:1.5}
+
 /* ── Photos + signature ──────────────────────────────────────────────────── */
 .photos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .photos .ib{background:var(--char);border:0;border-radius:12px;padding:15px 10px;color:var(--gold);
@@ -630,6 +665,91 @@ const DMG_AREAS = ['Cab','Boom / dipper','Bucket / attachment','Tracks / wheels'
   'Glass','Lights / beacon','Hydraulics','Chassis','Other'];
 const JC_TYPES = { service:'Service', repair:'Repair', breakdown:'Breakdown', inspection:'Inspection', damage:'Damage repair' };
 
+// ── Vehicles ────────────────────────────────────────────────────────────────
+// A job card is raised against plant or against a vehicle, and the two want
+// different paperwork: plant gets a service checklist, a lorry gets the twelve
+// week inspection and, when it is a tyre job, a reading off every wheel.
+const VEH_TYPES = {
+  twelve_week:'12 week check', tyres:'Tyres', service:'Service',
+  repair:'Repair', breakdown:'Breakdown', cvrt:'CVRT preparation', defect:'Driver defect'
+};
+// The twelve week check — the preventative maintenance inspection, walked in
+// the order it is actually carried out.
+const PMI_SECTIONS = [
+  { title:"Driver's controls & cab", items:[
+    { id:1,  label:'Seat, seat belt and mountings' },
+    { id:2,  label:'Steering wheel and column' },
+    { id:3,  label:'Instruments, warning lights and gauges' },
+    { id:4,  label:'Horn, wipers, washers and demister' },
+    { id:5,  label:'Mirrors and indirect vision devices' },
+    { id:6,  label:'Glass, visibility and view of the road' },
+    { id:7,  label:'Tachograph — calibration in date, seals intact' },
+    { id:8,  label:'Speed limiter operating and sealed' }
+  ]},
+  { title:'Braking system', items:[
+    { id:9,  label:'Service brake performance' },
+    { id:10, label:'Parking brake performance' },
+    { id:11, label:'Brake pipes, hoses and couplings' },
+    { id:12, label:'Air system — build-up, leaks, pressure warning' },
+    { id:13, label:'ABS / EBS warning lights and function' },
+    { id:14, label:'Brake linings, discs and drums' }
+  ]},
+  { title:'Steering & suspension', items:[
+    { id:15, label:'Steering play, joints and linkage' },
+    { id:16, label:'Kingpins and wheel bearings' },
+    { id:17, label:'Springs, air bags and shock absorbers' },
+    { id:18, label:'Chassis, cross members and mountings' }
+  ]},
+  { title:'Wheels & tyres', items:[
+    { id:19, label:'Tyre condition, tread depth and pressure' },
+    { id:20, label:'Wheel nuts, studs and rims' },
+    { id:21, label:'Spare wheel carrier and security' }
+  ]},
+  { title:'Lighting & electrical', items:[
+    { id:22, label:'Headlamps, aim and function' },
+    { id:23, label:'Side, tail, brake and indicator lamps' },
+    { id:24, label:'Reflectors, markers and number plate lamp' },
+    { id:25, label:'Battery security and wiring condition' }
+  ]},
+  { title:'Body, fuel & exhaust', items:[
+    { id:26, label:'Fuel tank, cap and lines — no leaks' },
+    { id:27, label:'Exhaust system, smoke and emissions' },
+    { id:28, label:'Body condition, doors, floor and load area' },
+    { id:29, label:'Tail lift, crane or tipping gear where fitted' },
+    { id:30, label:'Coupling, fifth wheel or towing gear' },
+    { id:31, label:'Spray suppression and side guards' }
+  ]},
+  { title:'Road test', items:[
+    { id:32, label:'Engine performance and noise' },
+    { id:33, label:'Transmission, clutch and gear change' },
+    { id:34, label:'Steering and braking on the road' },
+    { id:35, label:'Speedometer and tachograph reading correctly' }
+  ]}
+];
+const PMI_ITEMS = PMI_SECTIONS.flatMap(x => x.items);
+
+// Wheel positions, by axle layout. A tyre job takes a reading off every one.
+const WHEELSETS = {
+  '6x2': ['O/S Front','N/S Front','O/S Drive outer','O/S Drive inner',
+          'N/S Drive outer','N/S Drive inner','O/S Tag','N/S Tag'],
+  '8x4': ['O/S 1st steer','N/S 1st steer','O/S 2nd steer','N/S 2nd steer',
+          'O/S Drive 1 outer','O/S Drive 1 inner','N/S Drive 1 outer','N/S Drive 1 inner',
+          'O/S Drive 2 outer','O/S Drive 2 inner','N/S Drive 2 outer','N/S Drive 2 inner'],
+  '4x2': ['O/S Front','N/S Front','O/S Rear outer','O/S Rear inner','N/S Rear outer','N/S Rear inner'],
+  'van': ['O/S Front','N/S Front','O/S Rear','N/S Rear'],
+  'tri': ['O/S Axle 1','N/S Axle 1','O/S Axle 2','N/S Axle 2','O/S Axle 3','N/S Axle 3']
+};
+// Legal minimum tread: 1.0 mm over 3.5 t, 1.6 mm for anything lighter.
+const TREAD_MIN = { hgv: 1.0, light: 1.6 };
+const TYRE_ACTIONS = ['No action', 'Replaced', 'Repaired', 'Swapped', 'Pressure adjusted'];
+const VSTATUS = {
+  available: { label:'Available',      cls:'green' },
+  on_road:   { label:'On the road',    cls:'blue'  },
+  service:   { label:'In for service', cls:'amber' },
+  off_road:  { label:'Off road',       cls:'red'   }
+};
+
+
 function makeSeed(){ return {
   employees: [
     { id:1, name:'Johnny McGuirk', role:'Yard Manager', access:'full', mobile:'087 000 0001', pin:'1111', ticket:'Director' }
@@ -667,39 +787,82 @@ function makeSeed(){ return {
     { id:10, plant_no:'MH-610', make_model:'Atlas Copco XAS 88',  type:'compressor',  serial:'ACXAS-70218',  year:2017, hours:6402, fuel:2, status:'on_hire',  site_id:6, since:D(-8) },
     { id:11, plant_no:'MH-611', make_model:'Genset 20 kVA',       type:'genset',      serial:'GEN20-30875',  year:2020, hours:4470, fuel:3, status:'yard',     site_id:1, since:D(-14) }
   ],
+  // The lorries and vans. CVRT is the annual roadworthiness test; the twelve
+  // week check is the inspection in between.
+  vehicles: [
+    { id:1, reg:'201-CN-388',  make_model:'Scania R450 6x2',        kind:'Tractor unit',  axles:'6x2', weight:'hgv',
+      year:2020, odometer:412870, cvrt_due:D(94),  last_pmi:D(-63), status:'on_road' },
+    { id:2, reg:'182-CN-1094', make_model:'Volvo FM 8x4 Tipper',    kind:'Tipper',        axles:'8x4', weight:'hgv',
+      year:2018, odometer:288410, cvrt_due:D(31),  last_pmi:D(-88), status:'on_road' },
+    { id:3, reg:'171-CN-745',  make_model:'DAF LF 7.5t Beavertail', kind:'Plant carrier', axles:'4x2', weight:'hgv',
+      year:2017, odometer:196250, cvrt_due:D(-6),  last_pmi:D(-41), status:'off_road' },
+    { id:4, reg:'191-CN-2260', make_model:'Iveco Daily 7.2t Tipper',kind:'Tipper',        axles:'4x2', weight:'hgv',
+      year:2019, odometer:154030, cvrt_due:D(178), last_pmi:D(-22), status:'available' },
+    { id:5, reg:'221-CN-512',  make_model:'Ford Transit 350 L3H2',  kind:'Fitter\u2019s van', axles:'van', weight:'light',
+      year:2022, odometer:88940,  cvrt_due:D(120), last_pmi:D(-15), status:'on_road' },
+    { id:6, reg:'CN-TRL-04',   make_model:'Broshuis 3-axle Low Loader', kind:'Trailer',   axles:'tri', weight:'hgv',
+      year:2016, odometer:null,   cvrt_due:D(58),  last_pmi:D(-77), status:'available' }
+  ],
   jobcards: [
-    { id:1, ref:'JC-0039', machine_id:2, type:'repair', location:'site', site_id:2, customer_id:1,
+    { id:1, ref:'JC-0039', subject:'plant', machine_id:2, type:'repair', location:'site', site_id:2, customer_id:1,
       site_contact:'Pat Kelleher', fault:'Aux hydraulic line weeping at the quick-release coupler on the dipper.',
       fitter_id:1, status:'awaiting_po', raised_by:1, raised_on:D(-4), step:4,
       work_done:'Renewed the flat-face coupler and the 3/8 hose tail. Pressure tested aux circuit, no weep. Topped hydraulic oil.',
       labour_hours:2.5, parts:[{ name:'Flat-face coupler 3/8 BSP', qty:1, allocated:true },{ name:'Hose tail 3/8', qty:1, allocated:true },{ name:'Hydraulic oil 46 (5L)', qty:1, allocated:false }],
       checks:[], photos:[], signed_by:'Pat Kelleher', signature:null, po:null, completed_on:D(-3) },
-    { id:2, ref:'JC-0040', machine_id:3, type:'inspection', location:'workshop', site_id:1, customer_id:null,
+    { id:2, ref:'JC-0040', subject:'plant', machine_id:3, type:'inspection', location:'workshop', site_id:1, customer_id:null,
       site_contact:null, fault:'Pre-hire check before it goes back out on the yard list.',
       fitter_id:1, status:'complete', raised_by:1, raised_on:D(-9), step:4,
       work_done:'Full pre-hire inspection. Greased, tracks tensioned, beacon lens renewed. Fit for hire.',
       labour_hours:1.75, parts:[{ name:'Beacon lens', qty:1, allocated:false }],
       checks:[], photos:[], signed_by:'Johnny McGuirk', signature:null, po:'MH-INT-0040', completed_on:D(-8) },
-    { id:3, ref:'JC-0041', machine_id:5, type:'service', location:'workshop', site_id:1, customer_id:null,
+    { id:3, ref:'JC-0041', subject:'plant', machine_id:5, type:'service', location:'workshop', site_id:1, customer_id:null,
       site_contact:null, fault:'500 hour service due. Also reported slow on the tip ram.',
       fitter_id:1, status:'draft', raised_by:1, raised_on:D(-2), step:2,
       work_done:'', labour_hours:null,
       parts:[{ name:'Engine oil filter', qty:1, allocated:true },{ name:'Fuel filter', qty:1, allocated:true },{ name:'Engine oil 15W40 (20L)', qty:1, allocated:true }],
       checks:[], photos:[], signed_by:null, signature:null, po:null, completed_on:null },
     // Nobody has this one — it is what puts the banner on a full-access home screen.
-    { id:4, ref:'JC-0042', machine_id:6, type:'breakdown', location:'workshop', site_id:1, customer_id:null,
+    { id:4, ref:'JC-0042', subject:'plant', machine_id:6, type:'breakdown', location:'workshop', site_id:1, customer_id:null,
       site_contact:null, fault:'Came in off hire dead. Will not crank — suspect starter or the isolator.',
       fitter_id:null, status:'unassigned', raised_by:1, raised_on:D(-1), step:1,
       work_done:'', labour_hours:null, parts:[], checks:[], photos:[], signed_by:null, signature:null, po:null, completed_on:null },
     // Raised straight off the off-hire docket that found the damage.
-    { id:5, ref:'JC-0038', machine_id:1, type:'damage', location:'workshop', site_id:1, customer_id:6,
+    { id:5, ref:'JC-0038', subject:'plant', machine_id:1, type:'damage', location:'workshop', site_id:1, customer_id:6,
       site_contact:null, fault:'Offside door glass cracked and rear light lens broken. Chargeable to Greenfield Homes.',
       fitter_id:1, status:'complete', raised_by:1, raised_on:D(-6), step:4,
       work_done:'Renewed offside door glass and rear combination lamp. Machine back on the hire list.',
       labour_hours:3, parts:[{ name:'Door glass — KX037 offside', qty:1, allocated:true },{ name:'Rear combination lamp', qty:1, allocated:true }],
-      checks:[], photos:[], signed_by:'Johnny McGuirk', signature:null, po:'GH-5510-DMG', completed_on:D(-5) }
+      checks:[], photos:[], signed_by:'Johnny McGuirk', signature:null, po:'GH-5510-DMG', completed_on:D(-5) },
+
+    // Vehicles. The twelve week check and the tyre job are the two that carry
+    // their own paperwork.
+    { id:6, ref:'JC-0044', subject:'vehicle', vehicle_id:2, type:'twelve_week', location:'workshop', site_id:1, customer_id:null,
+      site_contact:null, fault:'12 week check due — last one was 88 days ago. CVRT falls due inside the month.',
+      fitter_id:1, status:'draft', raised_by:1, raised_on:D(-1), step:2,
+      work_done:'', labour_hours:null,
+      parts:[{ name:'Air dryer cartridge', qty:1, allocated:true }],
+      checks:[], photos:[], signed_by:null, signature:null, po:null, completed_on:null },
+    { id:7, ref:'JC-0045', subject:'vehicle', vehicle_id:3, type:'tyres', location:'workshop', site_id:1, customer_id:null,
+      site_contact:null, fault:'Nearside rear inner down to the wear bars. Check the lot while it is in.',
+      fitter_id:1, status:'awaiting_po', raised_by:1, raised_on:D(-3), step:4,
+      work_done:'Two rear tyres renewed, all six checked and pressures set. Nearside rear inner was below the limit.',
+      labour_hours:2.25,
+      parts:[{ name:'Tyre 245/70R19.5 — drive', qty:2, allocated:true },{ name:'Valve and balance', qty:2, allocated:false }],
+      checks:[], photos:[], signed_by:'Johnny McGuirk', signature:null, po:null, completed_on:D(-2),
+      tyres:[{ pos:'O/S Front', tread:5.8, pressure:120, action:'No action' },
+             { pos:'N/S Front', tread:6.1, pressure:120, action:'No action' },
+             { pos:'O/S Rear outer', tread:4.2, pressure:115, action:'Pressure adjusted' },
+             { pos:'O/S Rear inner', tread:1.8, pressure:110, action:'Replaced' },
+             { pos:'N/S Rear outer', tread:3.9, pressure:118, action:'No action' },
+             { pos:'N/S Rear inner', tread:0.7, pressure:104, action:'Replaced' }] },
+    { id:8, ref:'JC-0046', subject:'vehicle', vehicle_id:5, type:'defect', location:'workshop', site_id:1, customer_id:null,
+      site_contact:null, fault:'Driver defect — nearside sliding door catching and the reversing camera cutting out.',
+      fitter_id:null, status:'unassigned', raised_by:1, raised_on:D(0), step:1,
+      work_done:'', labour_hours:null, parts:[], checks:[], photos:[],
+      signed_by:null, signature:null, po:null, completed_on:null }
   ],
-  seq: { jobcard:43, jobcard_id:6 }
+  seq: { jobcard:47, jobcard_id:9 }
 }; }
 
 // GA1 reports of thorough examination. Twelve month interval on these machines;
@@ -815,6 +978,7 @@ const site    = id => byId('sites', id);
 const cust    = id => byId('customers', id);
 const machine = id => byId('machines', id);
 const cert    = id => byId('certs', id);
+const vehicle = id => byId('vehicles', id);
 const jobcard = id => byId('jobcards', id);
 const ref = (prefix, key) => `${prefix}-${String(db.seq[key]++).padStart(4, '0')}`;
 
@@ -870,24 +1034,41 @@ function machineView(m){
 const machinesView = () => db.machines.map(machineView);
 
 function jobcardView(j){
-  const m = machine(j.machine_id);
+  const vehicleCard = j.subject === 'vehicle';
+  const m = vehicleCard ? null : machine(j.machine_id);
+  const v = vehicleCard ? vehicleView(vehicle(j.vehicle_id)) : null;
   const s = site(j.site_id);
   return Object.assign({}, j, {
-    plant_no: m.plant_no, make_model: m.make_model, machine_type: m.type,
-    machine_label: `${m.plant_no} — ${m.make_model}`,
+    is_vehicle: vehicleCard,
+    subject_label: vehicleCard ? 'Vehicle' : 'Plant',
+    // One pair of fields the screens can use whichever it is.
+    asset_no: vehicleCard ? v.reg : m.plant_no,
+    asset_label: vehicleCard ? `${v.reg} — ${v.make_model}` : `${m.plant_no} — ${m.make_model}`,
+    make_model: vehicleCard ? v.make_model : m.make_model,
+    asset_kind: vehicleCard ? v.kind : m.type,
+    vehicle: v, machine_row: m,
+    plant_no: vehicleCard ? v.reg : m.plant_no,
+    machine_type: vehicleCard ? 'generic' : m.type,
+    machine_label: vehicleCard ? `${v.reg} — ${v.make_model}` : `${m.plant_no} — ${m.make_model}`,
     site_name: s ? s.name : '—',
     customer_name: j.customer_id ? cust(j.customer_id).name : null,
     fitter_name: j.fitter_id ? emp(j.fitter_id).name : null,
     raised_by_name: j.raised_by ? emp(j.raised_by).name : null,
-    type_label: JC_TYPES[j.type] || j.type,
+    type_label: (vehicleCard ? VEH_TYPES : JC_TYPES)[j.type] || j.type,
     status_label: JSTATUS[j.status].label, status_cls: JSTATUS[j.status].cls,
     where_label: j.location === 'workshop' ? 'Workshop' : (s ? s.name : 'Site'),
     parts_count: (j.parts || []).length,
-    checks_done: (j.checks || []).length
+    checks_done: (j.checks || []).length,
+    // Which checklist this card carries: the twelve week inspection, a reading
+    // off every wheel, or the plant service list.
+    check_kind: vehicleCard && j.type === 'twelve_week' ? 'pmi'
+      : vehicleCard && j.type === 'tyres' ? 'tyres' : 'service',
+    tyres: j.tyres || null
   });
 }
-function jobcardsView(scope, status){
+function jobcardsView(scope, status, subject){
   let list = db.jobcards.map(jobcardView);
+  if (subject && subject !== 'all') list = list.filter(j => (j.subject || 'plant') === subject);
   if (scope === 'mine') list = list.filter(j => j.fitter_id === S.user.id);
   else if (scope === 'unassigned') list = list.filter(j => !j.fitter_id);
   if (status && status !== 'all') {
@@ -897,6 +1078,32 @@ function jobcardsView(scope, status){
   const rank = { unassigned:0, draft:1, assigned:2, awaiting_po:3, complete:4 };
   return list.sort((a, b) => rank[a.status] - rank[b.status] || (a.raised_on < b.raised_on ? 1 : -1));
 }
+
+// A vehicle, read back. The twelve week check and the CVRT are the two dates
+// that decide whether it can go out, so they are worked out here rather than
+// left as raw dates on the screen.
+const PMI_INTERVAL = 84;                      // twelve weeks
+function vehicleView(v){
+  const pmiDue = v.last_pmi ? addDays(v.last_pmi, PMI_INTERVAL) : null;
+  const pmiDays = pmiDue ? daysBetween(todayISO(), pmiDue) : null;
+  const cvrtDays = v.cvrt_due ? daysBetween(todayISO(), v.cvrt_due) : null;
+  const band = d => d == null ? 'none' : d < 0 ? 'expired' : d <= DUE_WINDOW ? 'due' : 'valid';
+  return Object.assign({}, v, {
+    status_label: VSTATUS[v.status].label, status_cls: VSTATUS[v.status].cls,
+    wheels: WHEELSETS[v.axles] || WHEELSETS.van,
+    tread_min: TREAD_MIN[v.weight] || TREAD_MIN.light,
+    pmi_due: pmiDue, pmi_days: pmiDays, pmi_key: band(pmiDays),
+    pmi_label: pmiDays == null ? 'No check on file'
+      : pmiDays < 0 ? `12 week check ${plural(-pmiDays, 'day')} overdue`
+      : `12 week check due in ${plural(pmiDays, 'day')}`,
+    cvrt_days: cvrtDays, cvrt_key: band(cvrtDays),
+    cvrt_label: cvrtDays == null ? 'No CVRT on file'
+      : cvrtDays < 0 ? `CVRT lapsed ${plural(-cvrtDays, 'day')} ago`
+      : `CVRT due in ${plural(cvrtDays, 'day')}`,
+    open_cards: db.jobcards.filter(j => j.vehicle_id === v.id && j.status !== 'complete').length
+  });
+}
+const CERT_BAND_CLS = { valid:'green', due:'amber', expired:'red', none:'tomato' };
 
 // A machine's GA1 standing. "No cert on file" and "not a lifting appliance" are
 // deliberately different answers — one wants chasing, the other is correct.
@@ -1043,7 +1250,7 @@ const S = {
   screen: 'home', sheet: null, sheetWire: null, q: '',
   pdf: null, pdfWire: null,
   sheetKey: null, painted: null, scrollMem: {},
-  filters: { jc:'open', jcScope:'mine', ga1:'flagged', fleet:'all' },
+  filters: { jc:'open', jcScope:'mine', subject:'all', ga1:'flagged', fleet:'all' },
   draft: null          // the docket or job card being filled in
 };
 
@@ -1143,6 +1350,97 @@ const harvestNotes = state => $$('[data-note]').forEach(el => {
   if (c) c.note = el.value;
 });
 
+// The twelve week inspection is walked in groups, so it renders in groups.
+function sectionChecklist(state, sections){
+  const all = sections.flatMap(x => x.items);
+  const counts = {
+    pass: state.filter(c => c.state === 'pass').length,
+    fail: state.filter(c => c.state === 'fail').length,
+    todo: all.length - state.filter(c => c.state).length
+  };
+  const row = it => {
+    const c = state.find(x => x.item_id === it.id) || {};
+    return `<div class="clrow-wrap">
+      <div class="clrow ${c.state === 'fail' ? 'bad' : ''} ${c.state === 'na' ? 'na' : ''}">
+        <div class="c1">${esc(it.label)}</div>
+        <div class="c2">
+          <button type="button" class="cb pass ${c.state === 'pass' ? 'on' : ''}" data-ck="${it.id}" data-st="pass" aria-label="Pass">
+            ${I.tick({ s:16, c: c.state === 'pass' ? '#fff' : '#12a06a', w:2.6 })}</button>
+          <button type="button" class="cb fail ${c.state === 'fail' ? 'on' : ''}" data-ck="${it.id}" data-st="fail" aria-label="Defect">
+            ${I.x({ s:16, c: c.state === 'fail' ? '#fff' : '#c8352a', w:2.6 })}</button>
+          <button type="button" class="cb na ${c.state === 'na' ? 'on' : ''}" data-ck="${it.id}" data-st="na" aria-label="Not applicable">
+            ${I.dash({ s:16, c: c.state === 'na' ? '#fff' : '#8b8373', w:2.6 })}</button>
+        </div>
+      </div>
+      ${c.state === 'fail' ? `<div class="nw"><input class="cnote" data-note="${it.id}"
+        value="${esc(c.note || '')}" placeholder="What is wrong with it?"></div>` : ''}
+    </div>`;
+  };
+  return `<div class="clall">
+      <button type="button" id="ck-allpass">${I.tick({ s:16, c:'#12a06a' })} Mark all as passed</button>
+      <button type="button" id="ck-clear">${I.reset({ s:16, c:'#8b8373' })} Clear</button>
+    </div>
+    <div class="clhead"><div class="c1">Inspection point</div><div class="c2">Pass · Defect · N/A</div></div>
+    <div class="cllist">
+      ${sections.map(sec => `<div class="clsec">${esc(sec.title)}</div>${sec.items.map(row).join('')}`).join('')}
+    </div>
+    <div class="cltot">
+      <div class="p"><b>${counts.pass}</b><span>Passed</span></div>
+      <div class="f"><b>${counts.fail}</b><span>Defects</span></div>
+      <div><b>${counts.todo}</b><span>Left</span></div>
+    </div>`;
+}
+
+// ── Tyres ───────────────────────────────────────────────────────────────────
+// A reading off every wheel, read back against the legal minimum for that class
+// of vehicle — 1.0 mm over 3.5 t, 1.6 mm below it.
+function treadVerdict(tread, min){
+  if (tread === '' || tread == null || isNaN(Number(tread))) return { key:'none', label:'Not read' };
+  const t = Number(tread);
+  if (t < min) return { key:'bad', label:`Below ${min} mm` };
+  if (t < min + 1.5) return { key:'watch', label:'Monitor' };
+  return { key:'ok', label:'Legal' };
+}
+function tyreBlock(rows, min){
+  const done = rows.filter(r => r.tread !== '' && r.tread != null).length;
+  const below = rows.filter(r => treadVerdict(r.tread, min).key === 'bad').length;
+  return `<div class="tyhead"><div class="p">Wheel</div><div class="t">Tread mm</div><div class="r">PSI</div></div>
+    <div class="tylist">
+      ${rows.map((r, i) => {
+        const v = treadVerdict(r.tread, min);
+        return `<div class="tyrow ${v.key === 'bad' ? 'bad' : v.key === 'watch' ? 'watch' : ''}">
+          <div class="tytop">
+            <div class="p">${esc(r.pos)}</div>
+            <div class="t"><input data-ty="${i}" data-f="tread" type="number" step="0.1" min="0"
+              value="${r.tread == null ? '' : esc(String(r.tread))}" placeholder="—" aria-label="Tread on ${esc(r.pos)}"></div>
+            <div class="r"><input data-ty="${i}" data-f="pressure" type="number" min="0"
+              value="${r.pressure == null ? '' : esc(String(r.pressure))}" placeholder="—" aria-label="Pressure on ${esc(r.pos)}"></div>
+          </div>
+          <div class="tybot">
+            <span class="tyverdict ${v.key}">${esc(v.label)}</span>
+            <select data-ty="${i}" data-f="action" aria-label="Action on ${esc(r.pos)}">
+              ${TYRE_ACTIONS.map(a => `<option ${a === (r.action || 'No action') ? 'selected' : ''}>${esc(a)}</option>`).join('')}
+            </select>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <p class="tylegend">${done} of ${rows.length} wheels read. Legal minimum on this vehicle is
+      <b>${min} mm</b>${below ? ` — <b style="color:var(--red)">${plural(below, 'wheel')} below it</b>` : ''}.</p>`;
+}
+function wireTyres(rows, redraw){
+  $$('[data-ty]').forEach(el => {
+    const i = Number(el.dataset.ty), f = el.dataset.f;
+    const commit = () => { rows[i][f] = el.value === '' ? null : (f === 'action' ? el.value : Number(el.value)); S.draft.dirty = true; };
+    if (f === 'action') el.onchange = () => { commit(); redraw(); };
+    else { el.oninput = commit; el.onblur = () => { commit(); redraw(); }; }
+  });
+}
+const harvestTyres = rows => $$('[data-ty]').forEach(el => {
+  const i = Number(el.dataset.ty), f = el.dataset.f;
+  if (rows[i]) rows[i][f] = el.value === '' ? null : (f === 'action' ? el.value : Number(el.value));
+});
+
 function shrinkImage(file, maxPx, quality){
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -1215,12 +1513,17 @@ function sigBlock(id, label, value){
 // Raising one needs the job and, if there is somebody free, the person. Every
 // other field on the card belongs to whoever does the work.
 function createJobCard(p){
-  const m = machine(p.machine_id);
-  if (!m) throw new Error('Pick a machine');
-  if (!(p.fault || '').trim()) throw new Error('Say what is wrong with it');
+  const vehicleCard = p.subject === 'vehicle';
+  const m = vehicleCard ? null : machine(p.machine_id);
+  const v = vehicleCard ? vehicle(p.vehicle_id) : null;
+  if (vehicleCard ? !v : !m) throw new Error(vehicleCard ? 'Pick a vehicle' : 'Pick a machine');
+  if (!(p.fault || '').trim()) throw new Error('Say what the job is');
   const j = {
-    id: db.seq.jobcard_id++, ref: ref('JC', 'jobcard'), machine_id: m.id,
-    type: p.type || 'repair', location: p.location || 'workshop',
+    id: db.seq.jobcard_id++, ref: ref('JC', 'jobcard'),
+    subject: vehicleCard ? 'vehicle' : 'plant',
+    machine_id: m ? m.id : null, vehicle_id: v ? v.id : null,
+    type: p.type || (vehicleCard ? 'twelve_week' : 'repair'),
+    location: p.location || 'workshop',
     site_id: p.location === 'site' ? Number(p.site_id) : 1,
     customer_id: p.customer_id ? Number(p.customer_id) : null,
     site_contact: p.site_contact || null, fault: p.fault.trim(),
@@ -1260,10 +1563,16 @@ function sendJobCardForPO(id, p){
   if (!(p.signed_by || '').trim()) throw new Error('Name the person signing');
   j.signed_by = p.signed_by.trim(); j.signature = p.signature;
   j.completed_on = todayISO(); j.status = 'awaiting_po'; j.step = 4;
-  // The machine is right again, so it goes back on the hire list — unless it is
-  // still out with a customer.
-  const m = machine(j.machine_id);
-  if (m.status === 'off_road' || m.status === 'service') { m.status = 'yard'; m.since = todayISO(); }
+  // Whatever it was on is right again, so it goes back into service.
+  if (j.subject === 'vehicle') {
+    const v = vehicle(j.vehicle_id);
+    if (v.status === 'off_road' || v.status === 'service') v.status = 'available';
+    // A finished twelve week check is the new one on file.
+    if (j.type === 'twelve_week') v.last_pmi = todayISO();
+  } else {
+    const m = machine(j.machine_id);
+    if (m.status === 'off_road' || m.status === 'service') { m.status = 'yard'; m.since = todayISO(); }
+  }
   return jobcardView(j);
 }
 function closeJobCard(id, po){
@@ -1311,7 +1620,7 @@ function renderLogin(err){
 function signIn(id){
   S.user = emp(id);
   S.screen = 'home'; S.q = ''; S.sheet = null; S.pdf = null; S.draft = null;
-  S.filters = { jc:'open', jcScope: isFull() ? 'all' : 'mine', ga1:'flagged', fleet:'all' };
+  S.filters = { jc:'open', jcScope: isFull() ? 'all' : 'mine', subject:'all', ga1:'flagged', fleet:'all' };
   render();
   paintPins();
 }
@@ -1494,9 +1803,9 @@ function viewHome(){
 function viewJobCards(){
   const full = isFull();
   if (!full && S.filters.jcScope !== 'mine') S.filters.jcScope = 'mine';
-  const list0 = jobcardsView(S.filters.jcScope, S.filters.jc);
+  const list0 = jobcardsView(S.filters.jcScope, S.filters.jc, S.filters.subject);
   const q = S.q.toLowerCase();
-  const list = q ? list0.filter(j => (j.ref + ' ' + j.machine_label + ' ' + j.fault + ' ' +
+  const list = q ? list0.filter(j => (j.ref + ' ' + j.asset_label + ' ' + j.type_label + ' ' + j.fault + ' ' +
     (j.fitter_name || '') + ' ' + j.site_name).toLowerCase().includes(q)) : list0;
 
   const scopes = full
@@ -1505,6 +1814,8 @@ function viewJobCards(){
   const scopeChips = scopes.map(([k, l]) => `<button class="chip ${S.filters.jcScope===k?'on':''}" data-js="${k}">${l}</button>`).join('');
   const statusChips = [['open','Open'],['draft','Draft'],['awaiting_po','Awaiting PO'],['complete','Complete'],['all','All']]
     .map(([k, l]) => `<button class="chip ${S.filters.jc===k?'on':''}" data-jf="${k}">${l}</button>`).join('');
+  const subjectChips = [['all','Everything'],['plant','Plant'],['vehicle','Vehicles']]
+    .map(([k, l]) => `<button class="chip ${S.filters.subject===k?'on':''}" data-jsub="${k}">${l}</button>`).join('');
 
   const unassigned = jobcardsView('unassigned', 'open');
   const banner = (full && unassigned.length && S.filters.jcScope !== 'unassigned')
@@ -1527,14 +1838,15 @@ function viewJobCards(){
     const steps = j.status === 'complete' || j.status === 'awaiting_po' ? 4 : j.step;
     return `<div class="lcard ${!j.fitter_id ? 'flag' : ''}">
       <div class="top">
-        <span class="ic-sm">${I.wrench({ s:20, c:'#8a6410' })}</span>
+        <span class="ic-sm">${(j.is_vehicle ? I.truck : I.wrench)({ s:20, c:'#8a6410' })}</span>
         <div style="flex:1;min-width:0">
           <div class="t">${esc(j.ref)} · ${esc(j.type_label)}</div>
-          <div class="s">${esc(j.machine_label)}<br>${esc(j.fault)}</div>
+          <div class="s">${esc(j.asset_label)}<br>${esc(j.fault)}</div>
         </div>
       </div>
       <div class="tags">
         <span class="pill ${j.status_cls}">${esc(j.status_label)}</span>
+        <span class="pill ${j.is_vehicle ? 'blue' : 'grey'}">${esc(j.subject_label)}</span>
         <span class="pill grey">${esc(j.where_label)}</span>
         ${j.fitter_name ? `<span class="pill gold">${esc(first(j.fitter_name))}</span>` : ''}
         <span class="pill grey">${steps}/4 steps</span>
@@ -1547,6 +1859,7 @@ function viewJobCards(){
   paint(`${banner}
     <div class="search">${I.search({ s:20, c:'#8b8373' })}
       <input id="q" placeholder="Card, plant no, fault, fitter…" value="${esc(S.q)}" aria-label="Search job cards"></div>
+    <div class="chips">${subjectChips}</div>
     ${scopes.length > 1 ? `<div class="chips">${scopeChips}</div>` : ''}
     <div class="chips">${statusChips}</div>
     <button class="btn" id="jc-new" style="margin-bottom:18px">${I.plus({ s:19, c:'#f5c542' })} Raise a job card</button>
@@ -1556,6 +1869,7 @@ function viewJobCards(){
   wireSearch();
   $$('[data-js]').forEach(b => b.onclick = () => { S.filters.jcScope = b.dataset.js; render(); });
   $$('[data-jf]').forEach(b => b.onclick = () => { S.filters.jc = b.dataset.jf; render(); });
+  $$('[data-jsub]').forEach(b => b.onclick = () => { S.filters.subject = b.dataset.jsub; render(); });
   $$('[data-jv]').forEach(b => b.onclick = () => openJobCard(Number(b.dataset.jv)));
   $$('[data-work]').forEach(b => b.onclick = () => startJobCard(Number(b.dataset.work)));
   $$('[data-assign]').forEach(b => b.onclick = () => assignSheet(Number(b.dataset.assign)));
@@ -1566,11 +1880,126 @@ function viewJobCards(){
 
 // Raising one. Short on purpose: the job, where it is, and the person. Parts
 // can go on now so they are already on the card when the fitter opens it.
+// Raising a card starts with the one question that changes everything after
+// it: is this a machine or a vehicle?
 function newJobCardSheet(prefill){
+  const p = prefill || {};
+  if (p.machine_id) return plantCardSheet(p);
+  if (p.vehicle_id) return vehicleCardSheet(p);
+  openSheet('Raise a job card', `
+    <div class="slabel">What is the job on?</div>
+    <button class="mcard dark" data-subj="plant">
+      <span class="ic">${I.digger({ s:27, c:'#f5c542' })}</span>
+      <span class="tx"><h3>Plant</h3><p>Excavators, dumpers, rollers, telehandlers</p></span>
+      <span class="chev">${I.chev({ s:19, c:'#f5c542' })}</span>
+    </button>
+    <button class="mcard warm" data-subj="vehicle">
+      <span class="ic">${I.truck({ s:27, c:'#fff' })}</span>
+      <span class="tx"><h3>Vehicle</h3><p>Lorries, tippers, vans and trailers</p></span>
+      <span class="chev">${I.chev({ s:19, c:'#fff' })}</span>
+    </button>
+    <div class="note">A vehicle card carries different paperwork: the twelve week
+      inspection, or a reading off every wheel when it is a tyre job.</div>`,
+    `<button class="btn ghost" id="sh-cancel">Cancel</button>`,
+    () => $$('[data-subj]').forEach(b => b.onclick = () =>
+      b.dataset.subj === 'vehicle' ? vehicleCardSheet({}) : plantCardSheet({})));
+}
+
+// ── Vehicles ────────────────────────────────────────────────────────────────
+function vehicleCardSheet(prefill){
+  const p = prefill || {};
+  const d = {
+    subject:'vehicle',
+    vehicle_id: p.vehicle_id || db.vehicles[0].id,
+    type: p.type || 'twelve_week', location:'workshop',
+    fault: p.fault || '', fitter_id: isFull() ? '1' : '', parts: []
+  };
+  const harvest = () => {
+    const g = id => { const el = $(id); return el ? el.value : undefined; };
+    const set = (k, id) => { const v = g(id); if (v !== undefined) d[k] = v; };
+    set('vehicle_id', '#nv-vehicle'); set('type', '#nv-type');
+    set('fault', '#nv-fault'); set('fitter_id', '#nv-fitter');
+  };
+
+  const draw = () => {
+    const v = vehicleView(vehicle(Number(d.vehicle_id)));
+    const isPmi = d.type === 'twelve_week', isTyres = d.type === 'tyres';
+    openSheet('Vehicle job card', `
+      <div class="brief"><h4>The vehicle</h4>
+        <div class="bkv"><span class="k">Reg</span><span class="v">${esc(v.reg)}</span></div>
+        <div class="bkv"><span class="k">Make &amp; model</span><span class="v">${esc(v.make_model)}</span></div>
+        <div class="bkv"><span class="k">Odometer</span><span class="v">${v.odometer == null ? '—' : num(v.odometer) + ' km'}</span></div>
+        <div class="bkv"><span class="k">12 week check</span><span class="v">${v.last_pmi ? fmtDate(v.last_pmi) : '—'}</span></div>
+        <div class="bkv"><span class="k">CVRT</span><span class="v">${fmtDate(v.cvrt_due)}</span></div>
+      </div>
+      ${v.pmi_key === 'expired' || v.cvrt_key === 'expired' ? `<div class="note warm">${I.alert({ s:15, c:'#a8341f' })}
+        ${esc([v.pmi_key === 'expired' ? v.pmi_label : null, v.cvrt_key === 'expired' ? v.cvrt_label : null].filter(Boolean).join(' · '))}.</div>` : ''}
+
+      <label class="f"><span>Vehicle <span class="req">*</span></span><select id="nv-vehicle">
+        ${db.vehicles.map(x => `<option value="${x.id}" ${String(x.id) === String(d.vehicle_id) ? 'selected' : ''}>${esc(x.reg)} — ${esc(x.make_model)}</option>`).join('')}
+      </select></label>
+
+      <label class="f"><span>Kind of job <span class="req">*</span></span><select id="nv-type">
+        ${Object.entries(VEH_TYPES).map(([k, l]) => `<option value="${k}" ${k === d.type ? 'selected' : ''}>${esc(l)}</option>`).join('')}
+      </select></label>
+      ${isPmi ? `<div class="note" style="margin-top:-6px">A twelve week check carries the full
+        ${PMI_ITEMS.length}-point inspection — cab, brakes, steering, wheels, lighting, body and a road test.
+        ${v.pmi_days != null && v.pmi_days < 0 ? `<b>This one is ${plural(-v.pmi_days, 'day')} overdue.</b>` : ''}</div>` : ''}
+      ${isTyres ? `<div class="note" style="margin-top:-6px">A tyre job takes a tread depth and a
+        pressure off each of the ${v.wheels.length} wheels, against a legal minimum of
+        ${v.tread_min} mm for this vehicle.</div>` : ''}
+
+      <label class="f"><span>What the job is <span class="req">*</span></span>
+        <textarea id="nv-fault" placeholder="${isPmi ? 'Due date, anything the driver has reported…'
+          : isTyres ? 'Which wheel, what was noticed…' : 'What it is doing, what it is not doing…'}">${esc(d.fault)}</textarea></label>
+
+      <div class="slabel sp">Parts it needs</div>
+      ${d.parts.map((x, i) => `<div class="dmgitem"><span class="no" style="background:var(--brand-2)">${x.qty}</span>
+        <span class="dx"><b>${esc(x.name)}</b><span>Allocated now</span></span>
+        <button type="button" class="rm" data-prm="${i}" aria-label="Remove">${I.x({ s:15, c:'#5c5648' })}</button></div>`).join('')}
+      <div class="row2" style="margin-bottom:16px">
+        <input id="nv-pname" placeholder="Part">
+        <div style="display:flex;gap:8px"><input id="nv-pqty" type="number" value="1" min="1" style="flex:0 0 68px;text-align:center">
+          <button type="button" class="btn ghost sm" id="nv-padd" style="flex:1">Add</button></div>
+      </div>
+
+      ${isFull() ? `<label class="f"><span>Assign to</span><select id="nv-fitter">
+          <option value="">Leave it unassigned for now</option>
+          ${db.employees.map(e => `<option value="${e.id}" ${String(e.id) === String(d.fitter_id) ? 'selected' : ''}>${esc(e.name)}</option>`).join('')}
+        </select></label>` : ''}`,
+      `<button class="btn ghost" id="sh-cancel">Cancel</button>
+       <button class="btn" id="nv-save">Raise the card</button>`,
+      () => {
+        $('#nv-vehicle').onchange = () => { harvest(); draw(); };
+        $('#nv-type').onchange = () => { harvest(); draw(); };
+        $$('[data-prm]').forEach(b => b.onclick = () => { harvest(); d.parts.splice(Number(b.dataset.prm), 1); draw(); });
+        $('#nv-padd').onclick = () => {
+          const n = $('#nv-pname').value.trim();
+          if (!n) return toast('Name the part', 'bad');
+          harvest();
+          d.parts.push({ name: n, qty: Number($('#nv-pqty').value) || 1 });
+          draw();
+        };
+        $('#nv-save').onclick = () => {
+          harvest();
+          try {
+            const j = createJobCard(d);
+            closeSheet(); render();
+            toast(`${j.ref} raised on ${j.asset_no}${j.fitter_name ? ' — ' + first(j.fitter_name) + ' has it' : ''}`, 'good');
+          } catch (e) { toast(e.message, 'bad'); }
+        };
+      });
+  };
+  draw();
+}
+
+// ── Plant ───────────────────────────────────────────────────────────────────
+function plantCardSheet(prefill){
   const p = prefill || {};
   // Adding a part redraws the sheet, so everything typed is read back onto the
   // draft first — otherwise the fault disappears the moment a part goes on.
   const d = {
+    subject:'plant',
     machine_id: p.machine_id || machinesView()[0].id,
     type: p.type || 'repair', location: 'workshop',
     site_id: '', site_contact: '', fault: p.fault || '',
@@ -1584,7 +2013,7 @@ function newJobCardSheet(prefill){
   };
 
   const draw = () => {
-    openSheet('Raise a job card', `
+    openSheet('Plant job card', `
       <label class="f"><span>Machine <span class="req">*</span></span><select id="nj-machine">
         ${machinesView().map(m => `<option value="${m.id}" ${String(m.id) === String(d.machine_id) ? 'selected' : ''}>${esc(m.plant_no)} — ${esc(m.make_model)}</option>`).join('')}
       </select></label>
@@ -1712,7 +2141,8 @@ function poSheet(id){
 // sees on a card that is finished.
 function openJobCard(id){
   const j = jobcardView(jobcard(id));
-  const m = machineView(machine(j.machine_id));
+  const m = j.is_vehicle ? null : machineView(machine(j.machine_id));
+  const v = j.vehicle;
   const mine = j.fitter_id === S.user.id;
   const steps = (j.status === 'complete' || j.status === 'awaiting_po') ? 4 : j.step;
 
@@ -1727,6 +2157,7 @@ function openJobCard(id){
   openSheet(j.ref, `
     <div class="tags" style="margin:0 0 16px">
       <span class="pill ${j.status_cls}">${esc(j.status_label)}</span>
+      <span class="pill ${j.is_vehicle ? 'blue' : 'grey'}">${esc(j.subject_label)}</span>
       <span class="pill grey">${esc(j.type_label)}</span>
       <span class="pill grey">${steps}/4 steps</span>
       ${j.po ? `<span class="pill green">PO ${esc(j.po)}</span>` : ''}
@@ -1735,8 +2166,12 @@ function openJobCard(id){
 
     <div class="slabel sp">The job</div>
     <div class="readout">
-      <div class="kv"><span class="k">Machine</span><span class="v">${esc(j.plant_no)} — ${esc(j.make_model)}</span></div>
-      <div class="kv"><span class="k">Hour meter</span><span class="v">${num(m.hours)} hrs</span></div>
+      <div class="kv"><span class="k">${j.is_vehicle ? 'Vehicle' : 'Machine'}</span><span class="v">${esc(j.asset_no)} — ${esc(j.make_model)}</span></div>
+      ${j.is_vehicle
+        ? `<div class="kv"><span class="k">Odometer</span><span class="v">${v.odometer == null ? '—' : num(v.odometer) + ' km'}</span></div>
+           <div class="kv"><span class="k">12 week check</span><span class="v" style="color:${v.pmi_key === 'expired' ? 'var(--red)' : 'inherit'}">${esc(v.pmi_label)}</span></div>
+           <div class="kv"><span class="k">CVRT</span><span class="v" style="color:${v.cvrt_key === 'expired' ? 'var(--red)' : 'inherit'}">${esc(v.cvrt_label)}</span></div>`
+        : `<div class="kv"><span class="k">Hour meter</span><span class="v">${num(m.hours)} hrs</span></div>`}
       <div class="kv"><span class="k">Where</span><span class="v">${esc(j.where_label)}</span></div>
       ${j.site_contact ? `<div class="kv"><span class="k">Site contact</span><span class="v">${esc(j.site_contact)}</span></div>` : ''}
       <div class="kv"><span class="k">Raised by</span><span class="v">${esc(j.raised_by_name)} · ${fmtDate(j.raised_on)}</span></div>
@@ -1752,14 +2187,36 @@ function openJobCard(id){
         ${j.completed_on ? `<div class="kv"><span class="k">Finished</span><span class="v">${fmtDate(j.completed_on)}</span></div>` : ''}
       </div>` : ''}
 
-    ${(j.checks || []).length ? `<div class="slabel sp">Service checklist</div>
-      <div class="cllist">${j.checks.map(c => {
-        const it = SERVICE_ITEMS.find(i => i.id === c.item_id);
-        return `<div class="clrow ${c.state === 'fail' ? 'bad' : ''}"><div class="c1">${esc(it.label)}
-          ${c.note ? `<div style="font-size:13px;color:var(--ink-3)">${esc(c.note)}</div>` : ''}</div>
-          <div class="c2" style="flex:0 0 40px">${c.state === 'pass'
-            ? I.tick({ s:18, c:'#12a06a', w:2.6 }) : I.x({ s:18, c:'#c8352a', w:2.6 })}</div></div>`;
-      }).join('')}</div>` : ''}
+    ${(j.tyres || []).length ? `<div class="slabel sp">Tyres — ${j.tyres.length} wheels</div>
+      <div class="tyhead"><div class="p">Wheel</div><div class="t">Tread</div><div class="r">PSI</div></div>
+      <div class="tylist">${j.tyres.map(t => {
+        const v = treadVerdict(t.tread, j.vehicle.tread_min);
+        return `<div class="tyrow ${v.key === 'bad' ? 'bad' : v.key === 'watch' ? 'watch' : ''}">
+          <div class="tytop"><div class="p">${esc(t.pos)}</div>
+            <div class="t" style="text-align:center;font-weight:700;font-variant-numeric:tabular-nums">${t.tread == null ? '—' : t.tread}</div>
+            <div class="r" style="text-align:center;font-variant-numeric:tabular-nums">${t.pressure == null ? '—' : t.pressure}</div></div>
+          <div class="tybot"><span class="tyverdict ${v.key}">${esc(v.label)}</span>
+            <span style="font-size:13px;color:var(--ink-3);flex:1;text-align:right">${esc(t.action || 'No action')}</span></div>
+        </div>`;
+      }).join('')}</div>
+      <p class="tylegend">Legal minimum on this vehicle is <b>${j.vehicle.tread_min} mm</b>.</p>` : ''}
+
+    ${(j.checks || []).length ? `<div class="slabel sp">${j.check_kind === 'pmi'
+        ? '12 week inspection' : 'Service checklist'}</div>
+      <div class="cllist">${(j.check_kind === 'pmi' ? PMI_SECTIONS : [{ title:null, items:SERVICE_ITEMS }])
+        .map(sec => {
+          const rows = sec.items.filter(it => j.checks.some(c => c.item_id === it.id));
+          if (!rows.length) return '';
+          return (sec.title ? `<div class="clsec">${esc(sec.title)}</div>` : '') + rows.map(it => {
+            const c = j.checks.find(x => x.item_id === it.id);
+            return `<div class="clrow ${c.state === 'fail' ? 'bad' : ''}"><div class="c1">${esc(it.label)}
+              ${c.note ? `<div style="font-size:13px;color:var(--ink-3)">${esc(c.note)}</div>` : ''}</div>
+              <div class="c2" style="flex:0 0 40px">${c.state === 'pass'
+                ? I.tick({ s:18, c:'#12a06a', w:2.6 })
+                : c.state === 'na' ? I.dash({ s:18, c:'#8b8373', w:2.6 })
+                : I.x({ s:18, c:'#c8352a', w:2.6 })}</div></div>`;
+          }).join('');
+        }).join('')}</div>` : ''}
 
     ${(j.parts || []).length ? `<div class="slabel sp">Parts</div>
       ${j.parts.map(x => `<div class="dmgitem"><span class="no" style="background:var(--brand-2)">${x.qty}</span>
@@ -1792,6 +2249,12 @@ function startJobCard(id){
   S.draft = {
     kind:'jobcard', card_id:id, dirty:false,
     step: Math.max(1, j.step) - 1,
+    // A tyre job starts with a row per wheel off the vehicle's axle layout.
+    tyres: (jobcardView(j).check_kind === 'tyres')
+      ? (j.tyres && j.tyres.length
+          ? JSON.parse(JSON.stringify(j.tyres))
+          : vehicleView(vehicle(j.vehicle_id)).wheels.map(pos => ({ pos, tread:null, pressure:null, action:'No action' })))
+      : null,
     work_done: j.work_done || '', labour_hours: j.labour_hours || '',
     checks: JSON.parse(JSON.stringify(j.checks || [])),
     parts: JSON.parse(JSON.stringify(j.parts || [])),
@@ -1804,7 +2267,8 @@ function startJobCard(id){
 function jobCardStep(){
   const d = S.draft;
   const j = jobcardView(jobcard(d.card_id));
-  const m = machineView(machine(j.machine_id));
+  const m = j.is_vehicle ? null : machineView(machine(j.machine_id));
+  const v = j.vehicle;
   const ribbon = JC_STEPS.map((l, i) => `<button type="button" class="st ${i < d.step ? 'done' : ''} ${i === d.step ? 'on' : ''}" data-step="${i}">
       <span class="b">${i < d.step ? '✓' : i + 1}</span><span class="l">${esc(l)}</span></button>`).join('');
 
@@ -1814,14 +2278,21 @@ function jobCardStep(){
     body = `<p class="stepcount">Step 1 of 4</p><h3 class="steph">What you are walking into</h3>
       <p class="stepsub">Set when the card was raised — nothing here is yours to re-enter.</p>
       <div class="brief"><h4>${esc(j.ref)} · ${esc(j.type_label)}</h4>
-        <div class="bkv"><span class="k">Machine</span><span class="v">${esc(j.plant_no)}</span></div>
+        <div class="bkv"><span class="k">${j.is_vehicle ? 'Reg' : 'Machine'}</span><span class="v">${esc(j.asset_no)}</span></div>
         <div class="bkv"><span class="k">Model</span><span class="v">${esc(j.make_model)}</span></div>
-        <div class="bkv"><span class="k">Hour meter</span><span class="v">${num(m.hours)} hrs</span></div>
+        ${j.is_vehicle
+          ? `<div class="bkv"><span class="k">Odometer</span><span class="v">${v.odometer == null ? '—' : num(v.odometer) + ' km'}</span></div>
+             <div class="bkv"><span class="k">Last 12 week</span><span class="v">${v.last_pmi ? fmtDate(v.last_pmi) : '—'}</span></div>
+             <div class="bkv"><span class="k">CVRT</span><span class="v">${fmtDate(v.cvrt_due)}</span></div>`
+          : `<div class="bkv"><span class="k">Hour meter</span><span class="v">${num(m.hours)} hrs</span></div>`}
         <div class="bkv"><span class="k">Where</span><span class="v">${esc(j.where_label)}</span></div>
         ${j.site_contact ? `<div class="bkv"><span class="k">Ask for</span><span class="v">${esc(j.site_contact)}</span></div>` : ''}
         <div class="bkv"><span class="k">Raised by</span><span class="v">${esc(j.raised_by_name)}</span></div>
       </div>
-      <div class="slabel">The fault as reported</div>
+      ${j.is_vehicle && (v.pmi_key === 'expired' || v.cvrt_key === 'expired')
+        ? `<div class="note warm">${I.alert({ s:15, c:'#a8341f' })}
+            ${esc([v.pmi_key === 'expired' ? v.pmi_label : null, v.cvrt_key === 'expired' ? v.cvrt_label : null].filter(Boolean).join(' · '))}.</div>` : ''}
+      <div class="slabel">${j.is_vehicle ? 'What the job is' : 'The fault as reported'}</div>
       <div class="note">${esc(j.fault)}</div>
       ${d.parts.length ? `<div class="slabel sp">Parts already allocated</div>
         ${d.parts.filter(x => x.allocated).map(x => `<div class="dmgitem">
@@ -1832,16 +2303,26 @@ function jobCardStep(){
 
   if (d.step === 1) {
     body = `<p class="stepcount">Step 2 of 4</p><h3 class="steph">The work</h3>
-      <p class="stepsub">What you did and how long it took. The service checklist goes on the
-        card and prints with it.</p>
+      <p class="stepsub">${j.check_kind === 'pmi'
+        ? 'What you did and how long it took, then the twelve week inspection, walked in the order it is carried out.'
+        : j.check_kind === 'tyres'
+          ? 'What you did and how long it took, then a tread depth and a pressure off every wheel.'
+          : 'What you did and how long it took. The service checklist goes on the card and prints with it.'}</p>
       <label class="f"><span>Work carried out <span class="req">*</span></span>
         <textarea id="jw-work" style="min-height:150px" placeholder="What you found, what you did, what you tested…">${esc(d.work_done)}</textarea></label>
       <label class="f"><span>Labour hours <span class="req">*</span></span>
         <input id="jw-hrs" type="number" step="0.25" min="0" value="${esc(d.labour_hours)}" placeholder="0.00"></label>
-      <div class="slabel sp">Service checklist</div>
-      ${checklistBlock(d.checks, SERVICE_ITEMS, 'Service item')}`;
+      ${j.check_kind === 'pmi'
+        ? `<div class="slabel sp">12 week inspection — ${PMI_ITEMS.length} points</div>
+           ${sectionChecklist(d.checks, PMI_SECTIONS)}`
+        : j.check_kind === 'tyres'
+          ? `<div class="slabel sp">Every wheel on the ${esc(j.vehicle.kind.toLowerCase())}</div>
+             ${tyreBlock(d.tyres, j.vehicle.tread_min)}`
+          : `<div class="slabel sp">Service checklist</div>
+             ${checklistBlock(d.checks, SERVICE_ITEMS, 'Service item')}`}`;
     wire = () => {
-      wireChecklist(d.checks, jobCardStep, SERVICE_ITEMS);
+      if (j.check_kind === 'tyres') wireTyres(d.tyres, jobCardStep);
+      else wireChecklist(d.checks, jobCardStep, j.check_kind === 'pmi' ? PMI_ITEMS : SERVICE_ITEMS);
       $('#jw-work').oninput = () => { d.work_done = $('#jw-work').value; d.dirty = true; };
       $('#jw-hrs').oninput = () => { d.labour_hours = $('#jw-hrs').value; d.dirty = true; };
     };
@@ -1887,10 +2368,13 @@ function jobCardStep(){
         back on the hire list when the card is sent.</p>
       <div class="readout">
         <div class="kv"><span class="k">Card</span><span class="v">${esc(j.ref)}</span></div>
-        <div class="kv"><span class="k">Machine</span><span class="v">${esc(j.plant_no)}</span></div>
+        <div class="kv"><span class="k">${j.is_vehicle ? 'Vehicle' : 'Machine'}</span><span class="v">${esc(j.asset_no)}</span></div>
         <div class="kv"><span class="k">Labour</span><span class="v big">${esc(d.labour_hours || '—')} hrs</span></div>
         <div class="kv"><span class="k">Parts</span><span class="v">${plural(d.parts.length, 'line')}</span></div>
-        <div class="kv"><span class="k">Checklist</span><span class="v">${d.checks.filter(c => c.state === 'pass').length} of ${SERVICE_ITEMS.length} passed${fails ? `, ${fails} failed` : ''}</span></div>
+        ${j.check_kind === 'tyres'
+          ? `<div class="kv"><span class="k">Wheels read</span><span class="v">${d.tyres.filter(t => t.tread != null).length} of ${d.tyres.length}</span></div>
+             <div class="kv"><span class="k">Below the limit</span><span class="v" style="color:${d.tyres.some(t => treadVerdict(t.tread, j.vehicle.tread_min).key === 'bad') ? 'var(--red)' : 'inherit'}">${d.tyres.filter(t => treadVerdict(t.tread, j.vehicle.tread_min).key === 'bad').length}</span></div>`
+          : `<div class="kv"><span class="k">${j.check_kind === 'pmi' ? 'Inspection' : 'Checklist'}</span><span class="v">${d.checks.filter(c => c.state === 'pass').length} of ${(j.check_kind === 'pmi' ? PMI_ITEMS : SERVICE_ITEMS).length} passed${fails ? `, ${fails} failed` : ''}</span></div>`}
       </div>
       <div class="slabel">Photos of the work</div>
       ${d.photos.length ? `<div class="thumbs">${d.photos.map((p, i) => `<div class="thumb">
@@ -1905,8 +2389,8 @@ function jobCardStep(){
         <input id="jw-signedby" value="${esc(d.signed_by)}" placeholder="${j.customer_name ? 'Who signed on site' : 'Yard manager'}"></label>
       ${sigBlock('jw-sig', 'Sign here', d.signature)}`;
     wire = () => {
-      $('#jph-before').onclick = () => { d.photos.push({ tag:'Before', src: fakePhoto('Before', j.plant_no, todayISO()) }); d.dirty = true; jobCardStep(); };
-      $('#jph-after').onclick  = () => { d.photos.push({ tag:'After',  src: fakePhoto('After',  j.plant_no, todayISO()) }); d.dirty = true; jobCardStep(); };
+      $('#jph-before').onclick = () => { d.photos.push({ tag:'Before', src: fakePhoto('Before', j.asset_no, todayISO()) }); d.dirty = true; jobCardStep(); };
+      $('#jph-after').onclick  = () => { d.photos.push({ tag:'After',  src: fakePhoto('After',  j.asset_no, todayISO()) }); d.dirty = true; jobCardStep(); };
       $$('[data-jphrm]').forEach(b => b.onclick = () => { d.photos.splice(Number(b.dataset.jphrm), 1); d.dirty = true; jobCardStep(); });
       const pad = $('#jw-sig');
       if (pad) {
@@ -1938,6 +2422,7 @@ function jobCardStep(){
     const hh = g('#jw-hrs');   if (hh !== undefined) d.labour_hours = hh;
     const sb = g('#jw-signedby'); if (sb !== undefined) d.signed_by = sb;
     harvestNotes(d.checks);
+    if (d.tyres) harvestTyres(d.tyres);
   }
   // Every step saves as it is left, so a card put down mid-job is a Draft with
   // the work on it rather than nothing at all.
@@ -1945,7 +2430,7 @@ function jobCardStep(){
     harvest();
     saveJobCard(d.card_id, {
       work_done: d.work_done, labour_hours: d.labour_hours ? Number(d.labour_hours) : null,
-      checks: d.checks.filter(c => c.state), parts: d.parts, photos: d.photos,
+      checks: d.checks.filter(c => c.state), parts: d.parts, photos: d.photos, tyres: d.tyres,
       step: Math.max(jobcard(d.card_id).step, d.step + 1)
     });
   }
@@ -1969,10 +2454,16 @@ function jobCardStep(){
       if (d.step === 1) {
         if (!(d.work_done || '').trim()) return toast('Write up what was carried out', 'bad');
         if (!d.labour_hours) return toast('Put the labour hours on it', 'bad');
-        const left = SERVICE_ITEMS.length - d.checks.filter(c => c.state).length;
-        if (left) return toast(`${plural(left, 'checklist row')} still not answered`, 'bad');
-        if (d.checks.some(c => c.state === 'fail' && !(c.note || '').trim()))
-          return toast('A failed row needs a note', 'bad');
+        if (j.check_kind === 'tyres') {
+          const unread = d.tyres.filter(t => t.tread === '' || t.tread == null).length;
+          if (unread) return toast(`${plural(unread, 'wheel')} still without a tread reading`, 'bad');
+        } else {
+          const items = j.check_kind === 'pmi' ? PMI_ITEMS : SERVICE_ITEMS;
+          const left = items.length - d.checks.filter(c => c.state).length;
+          if (left) return toast(`${plural(left, 'inspection point')} still not answered`, 'bad');
+          if (d.checks.some(c => c.state === 'fail' && !(c.note || '').trim()))
+            return toast('A defect needs a note saying what is wrong', 'bad');
+        }
       }
       if (d.step === 3) {
         if (!(d.signed_by || '').trim()) return toast('Name the person signing', 'bad');
