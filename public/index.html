@@ -1897,9 +1897,7 @@ function newJobCardSheet(prefill){
       <span class="ic">${I.truck({ s:27, c:'#fff' })}</span>
       <span class="tx"><h3>Vehicle</h3><p>Lorries, tippers, vans and trailers</p></span>
       <span class="chev">${I.chev({ s:19, c:'#fff' })}</span>
-    </button>
-    <div class="note">A vehicle card carries different paperwork: the twelve week
-      inspection, or a reading off every wheel when it is a tyre job.</div>`,
+    </button>`,
     `<button class="btn ghost" id="sh-cancel">Cancel</button>`,
     () => $$('[data-subj]').forEach(b => b.onclick = () =>
       b.dataset.subj === 'vehicle' ? vehicleCardSheet({}) : plantCardSheet({})));
