@@ -4,13 +4,11 @@ Interactive wireframe of the **McGuirk Hire operator phone app**, prepared by
 DMC Consultancy Ltd. One self-contained page, no build, no dependencies, no
 backend — everything runs in the browser tab.
 
-What it covers: **on hire and off hire dockets** signed at the machine, and
-**plant machinery job cards** worked through on the phone. The two are wired to
-each other, so a defect found on a docket raises a card, and a card closed puts
-the machine back on the hire list.
+What it covers: **plant machinery job cards** worked through on the phone, the
+**GA1 thorough examination** certificates behind every lifting appliance, and a
+**fleet** view that puts both against the machine they belong to.
 
-There is no office backend in this set — the phone app only, as asked. The app is
-the two features and the dockets they produce: no fleet register and no timesheet.
+There is no office backend in this set — the phone app only, as asked.
 
 ## Running it
 
@@ -42,209 +40,103 @@ else, or close one with a PO. To put one back, add a row to the `employees` list
 at the top of the script with `access:'general'`; the screens and the rules
 behind them pick it up with no other change.
 
-## 1 · On hire docket — six steps
-
-`Details → Readings → Condition → Damage → Photos → Sign`
-
-- **Details** — machine (only what is standing in the yard), customer, site,
-  dates, order ref. Self drive or operated; an operated hire will not go through
-  without the operator named on it. Choosing the customer offers their own site
-  and fills in the contact already on file.
-- **Readings** — hour meter and fuel level. The meter cannot read less than the
-  hours already against the machine.
-- **Condition** — 15-row walk-round, each row **pass / defect / n/a**. A defect
-  needs a note, and a docket completed with defects on it raises a job card
-  rather than sending the machine out broken.
-- **Damage** — tap *Add damage*, then tap the spot on a silhouette of that
-  machine type. The pin takes an area, a type and a note. What is not marked
-  here is what the customer answers for when it comes back.
-- **Photos** — four fixed angles (front, offside, nearside, rear) so two dockets
-  on the same machine are comparable. Meter shot optional.
-- **Sign** — conditions of hire accepted, customer signs, driver signs.
-
-Completing it creates the hire *and* the docket together, moves the machine on
-hire to that site, and opens the printable docket.
-
-## 2 · Off hire — the period decides the date
-
-There is no request step and no office confirmation. **Every hire goes out on an
-agreed period** — days, weeks or months, set on the on hire docket — so the date
-it comes off charge is known before the lorry leaves the yard. The app works the
-due-back date out as the period is typed and prints it on the on hire docket.
-
-Any machine that is out can be off hired. `Readings → Condition → Damage →
-Photos → Sign`, read against the on hire docket the whole way through:
-
-- the off hire date **defaults to the agreed due-back date** (including any
-  extension), and can be moved on to the day it was actually collected if the
-  extra days are chargeable
-- hours used comes off the two meter readings
-- fuel down from the level it went out on is flagged as a refuelling charge
-- days beyond the agreed period — extensions included — are called out as
-  **chargeable** on the docket
-- damage already marked shows **in grey**; anything added is **new this hire**
-  and marked chargeable
-- the on hire photographs are shown underneath the new ones
-
-Completing it closes the hire, brings the machine back to the yard, and — if
-anything failed or any new damage was marked — puts it **off road** rather than
-back on the hire list and raises a **damage card against the customer**.
-
-### Past due, and extending
-
-A hire that runs beyond its agreed period is **still on hire and still on
-charge** — being late is a fact about a live hire, not a state of its own. Those
-float to the top of the register, get a red *n days over* pill, count on Home,
-have their own filter, and put the banner on Home.
-
-From there the office has two ways out: **collect it**, or **extend it**.
-
-**Extend** takes an extra period in the same units, shows the new due-back date
-as it is typed, and records **who asked for it, who agreed it, the date, and an
-order ref** for the extra period — customers often issue a new PO for it. The
-original agreed period is left alone and the extension sits beside it, so the
-hire reads *2 weeks + 3 days* rather than losing what was signed for. A hire can
-be extended more than once and the whole history is on it.
-
-Extending moves the date the machine comes off charge. It does not wipe days that
-have already run over — the form says so on a hire that is already late.
-
-**Extending is a full access action.** It is a commercial decision, so a driver
-or fitter does not get the button, and the rule behind it refuses them too.
-
-The seed shows both cases: **MH-530** is six days over and never extended, and
-**MH-421** has been extended by three days already and is still two days over.
-
-## 3 · Job cards — four steps
+## 1 · Job cards — four steps
 
 `Start → Work → Parts → End`, on the MPF pattern.
 
 - **Start** is a read-only brief: machine, meter, where, who to ask for, the
-  fault as reported, parts already allocated, and the docket the card came off if
-  it came off one. The fitter never re-enters what the yard already set.
-- **Work** — what was carried out, labour hours, and a 10-row service checklist.
-- **Parts** — allocated parts can be taken off if they were not used; anything
+  fault as reported and parts already allocated. The fitter never re-enters what
+  the yard already set.
+- **Work** — what was carried out, labour hours, and a 10-row service checklist,
+  each row pass / defect / n-a with a note on anything failed.
+- **Parts** — allocated parts can be struck off if they were not used; anything
   off the shelf gets added.
 - **End** — before and after photos, signed on site, then away to the office.
-  A card sent is **Awaiting PO** and the machine goes back on the hire list; a
-  full access account adds the PO to close it.
+  A card sent is **Awaiting PO** and the machine goes back on the list; a full
+  access account adds the PO to close it.
 
 States: `Unassigned · Assigned · Draft · Awaiting PO · Complete`. Every step
 saves as it is left, so a card put down mid-job is a Draft with the work on it.
-Unassigned cards put a banner on a full access home screen.
+Unassigned cards put a banner on Home.
 
-## 4 · GA2 — the plant weekly check
+## 2 · Plant Machinery GA1
 
-Built to the supplied wireframes. **Submissions list** with a search, *this
-week's submissions* under the week's date range, each card showing the plant
-number, the day and time, the operator, and a **View PDF**; **+ New Check**
-across the bottom.
+Search the fleet, pick a machine, read its **report of thorough examination**.
 
-The check itself follows the same form as the wireframe, adapted from a truck to
-a machine:
+The GA1 applies to **lifting appliances**, and that distinction is built in: an
+excavator or a telehandler needs one, a dumper, roller, compressor or genset does
+not. So *"no GA1 on file"* and *"not a lifting appliance"* are different answers —
+one wants chasing, the other is simply correct — and the screen says which.
 
-| Wireframe | Here |
-| --- | --- |
-| Employee · Reg · Date · Time | Operator · Plant · Date · Time |
-| Select Truck | Select machine |
-| General remarks | General remarks |
-| Odometer reading | **Hour meter reading**, with the last recorded hours shown |
-| Item / Checked / Remark table, banded by section | Same, **27 items over four sections** — In Cab, Engine & Fluids, Walk-round, Function test |
-| NIL Defects · Select All | Same |
-| Photos (0/6) · Signature · Submit | Same |
+- **Search** on plant number, model, serial or certificate number
+- **Filters** — needs attention / in date / due soon / out of date / no GA1 needed
+- Every machine shows its certificate number, next due date and standing:
+  *245 days left*, *due in 25 days*, *lapsed 30 days ago*
+- Anything **out on site on a lapsed GA1** is called out at the top of the screen
+- Tapping a machine gives the report in force — examined on, next due, interval,
+  **safe working load**, whether it is safe to operate, any defects noted, and the
+  competent person who signed it — plus earlier reports on the same machine
+- **View the certificate** opens it laid out as **Form GA1**, headed by the
+  examining company with the McGuirk mark as the owner's file copy. Print works
 
-- **Select all** checks the lot; knocking one back out and putting a remark
-  against it makes it a defect
-- **NIL defects is refused** while anything carries a remark — that is not a nil
-  return, and the app says so rather than letting it through
-- Submitting files the check, moves the machine's hour meter on, and **raises a
-  job card on any defect found**, quoting the check and the remark. The card
-  links back to the check and the check is reachable from the card
-- **View PDF** opens the filed GA2 as paper — the machine, the meter, the whole
-  walk-round with defects in red, the NIL declaration, photographs and the
-  operator's signature. Print works
+The seed covers every case: three in date, **MH-202** falling due inside the
+month, **MH-530 lapsed and out on a customer's site**, and six machines correctly
+outside the regime.
 
-### Not checked this week
-
-A weekly check is only weekly if somebody notices when it is missed, so the
-screen counts **machines not checked this week**, banners them, and offers the
-check straight off the banner.
-
-One thing I did not copy from the wireframes: their list has rows reading **"No
-Vehicle"**, which means their app accepts a submission with no vehicle attached.
-Here the machine is required, so a check is always against a machine.
-
-## 5 · Fleet
+## 3 · Fleet
 
 Every machine, searchable on plant number, model, serial or site, filtered by
-**GA1 attention**, **no weekly check**, or where the machine is. Each row carries
-its status, its GA1 standing and whether the GA2 is done this week.
+**GA1 attention**, **open cards**, or where the machine is. Each row carries its
+status, its GA1 standing and any open cards.
 
 Opening a machine gives its details — model, serial, year, hour meter, fuel,
-where it is, and the hire it is on — and then its paperwork:
+where it is standing and since when — and then its paperwork:
 
 - **GA1 — thorough examination.** The report in force with its certificate
   number, dates, standing and safe working load, superseded reports underneath,
   each opening the printed Form GA1. A machine outside the lifting-appliance
   rules says so instead of showing a gap.
-- **GA2 — weekly checks.** The checks filed against that machine, most recent
-  first, each opening its report, with a button to do this week's.
-- **Job cards** raised on the machine.
-
-## 6 · The printable docket
-
-Two pages, in the reader the paper would come out of:
-
-1. Letterhead, docket and hire refs, customer, machine, readings, the full
-   condition check with defects in red, the damage schedule with a chargeable
-   column, both signatures, and the conditions of hire.
-2. The four condition photographs, the damage pins drawn on the machine — grey
-   for what was already there, red for what is new — and, on an off hire docket,
-   a *read against the on hire docket* summary.
-
-**Print really prints.** The pages are cloned out of the handset and sent to the
-printer, so the client can hold the thing. Email and download say what they
-would do instead of pretending.
+- **Job cards** raised on that machine, newest first, each opening the card —
+  and a button to raise a new one against it.
 
 ## Also in the app
 
-**Dockets** — everything signed, on file, filtered on hire / off hire, each one
-opening the printable document. A docket is also reachable from the hire it
-belongs to and from any job card raised off one.
+Clock in / out and a **New job card** shortcut sit at the top of Home, and
+**Profile** carries the access level and a **Reset the demo data** button.
 
-Clock in / out sits at the top of Home, and **Profile** carries the access level
-and a **Reset the demo data** button.
-
-Six screens: Home, On Hire / Off Hire, Job Cards, GA2 Plant Weekly Check, Fleet
-and Dockets. The tab bar carries the five daily ones; Dockets is a Home tile and
-is also reachable from any hire or card.
+Four screens: Home, Job Cards, Plant Machinery GA1, Fleet.
 
 ## Known limits of a wireframe
 
 - **Nothing is saved.** Data lives in the tab, reseeds on reload, and dates shift
   to whatever day it is opened, so the story reads the same whenever it is shown.
-- **Photos are stand-ins.** Tapping an angle drops a labelled placeholder so the
-  demo flows in one tap. *From the phone* opens the real camera / file picker and
-  that path works — the placeholder is only so nobody has to find a photo of a
-  digger mid-pitch.
+- **Photos are stand-ins.** Tapping Before or After on a job card drops a
+  labelled placeholder so the demo flows in one tap, rather than making anybody
+  find a photo of a digger mid-pitch.
 - **Signatures on the dockets that were already on file** are generated. The ones
   you draw are yours.
 - **The yard's own address, phone and VAT number are placeholders.** They are in
-  one place — the `YARD` object at the top of the script — and print on every
-  docket, so they want swapping for the real ones before this is shown.
+  one place — the `YARD` object at the top of the script — and print on the GA1,
+  so they want swapping for the real ones before this is shown.
 - The logo is **rebuilt as vector** from the artwork supplied, so it prints
   sharp. Worth swapping for the real file if they have it as SVG or EPS.
 
 ## Not in this set, by decision
 
-Hired-in plant and rates/spend are out of scope. GA1 certificates can be read and
-printed but **not added** — the reports come from the examining company. GA2
-checks can be filed from the app.
+**On hire / off hire has been removed**, and the dockets it produced went with it
+— they were its records and there was nothing else in them. It is all in the git
+history (`a4b816a` and earlier) if it is ever wanted back.
+
+The **GA2 weekly check** was built and then removed at the same time; it is in
+`a4b816a` too.
+
+GA1 certificates can be read and printed but **not added** — the reports come
+from the examining company.
 
 ## What would sharpen it
 
-- **Their actual paper docket.** The printable page is modelled on what a plant
-  hire docket carries, not on McGuirk's own book. With a photo of the real one it
-  can be matched field for field.
-- **Their condition checklist.** The 15 rows are a sensible handover walk-round;
-  if the yard already has its own list, that goes in instead.
+- **Their service checklist.** The 10 rows on a job card are a sensible service
+  list; if the workshop already has its own, that goes in instead.
+- **A real GA1 from their examining company.** The printed form follows the
+  statutory headings, but matching their inspector's actual layout would make it
+  unarguable.
